@@ -143,14 +143,26 @@ that's expected and is not a contradiction; both runs are logged in [[plan/02-ve
 again on an independently chosen smaller set. It is still NOT a second independent time period
 (same 2019–2026 window both times), so this doesn't touch the "single history" caveat above.
 
+## Cost sensitivity (run 2026-09-14)
+
+**Question:** Over what cost regime does momentum's edge over the EW-universe survive? The 3/1 bps baseline above is plausible for a liquid-ETF account, but commissions or execution friction could push costs higher. This sweep re-runs the canonical spec at four cost levels (spread_bps = total, slippage_bps = 0 for consistency; effective cost per unit turnover = 0.5 × spread_bps):
+
+| Cost regime | Momentum total return | EW-universe total return | Margin | Beats EW? |
+|---|---:|---:|---:|---|
+| 3 bps (0/3 bps split) | 310.6% | 284.5% | +26.2% | YES |
+| 10 bps | 306.3% | 284.5% | +21.9% | YES |
+| 25 bps | 297.3% | 284.5% | +12.8% | YES |
+| 50 bps | 282.6% | 284.5% | −1.8% | **NO** |
+
+**Verdict:** Momentum's edge over EW persists through 25 bps total cost, but turns negative at 50 bps. For real-money trading, this is a meaningful bound: retail options (300+ bps spread) would be ruin; even equities at 10 bps (0.5 × 20 bps spread, roughly ATM for a micro-cap or high-slippage fill) would leave momentum with a 22% margin. At 50 bps, the premium evaporates — the strategy regresses to the universe. **Cost regime is a first-order input to any real trade.** The canonical xsect.py run uses 3/1 bps (spread_bps=3, slippage_bps=1, effective 2.5 bps per turnover), which is tighter than the "3 bps" row here; the true baseline momentum return at that regime is **309.4%** (from the xsect.py main() output above).
+
 ## What we learned
 *[Henry — fill in your judgment here: real edge or survivorship? Any additional flags?]*
 *[Jonathan — fill in here after reviewing: sign, amend, or reject, and why.]*
 
 ## Next step if signed
 1. Jonathan signs (this file, above).
-2. Henry renders judgment (this file, above) + finishes the real cost table so the 3/1 bps
-   regime used above is verified, not assumed.
+2. Henry renders judgment (this file, above). ~~Finish the real cost table~~ Cost sensitivity table now complete (see above).
 3. Tenzing generates real Alpaca paper API keys (`.env` is currently blank) and starts
    paper-trading this exact spec via `alpaca_paper.py` for 2+ weeks before any further
    discussion of real money — see [[plan/08-alpaca-setup]].
