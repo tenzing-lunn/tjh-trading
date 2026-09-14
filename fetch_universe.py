@@ -35,7 +35,7 @@ UNIVERSE = [
 ]
 # Benchmark, fetched separately so spy.csv always exists for scan.py/xsect.py's SPY
 # comparison, without counting toward the 30-name stock panel.
-BENCHMARK = ["SPY"]
+BENCHMARK = ["SPY", "MTUM"]
 
 # Ticker -> sector, the shared source of truth for any grouping (engine_api.py /
 # the web app's data panel). Keep in sync with the UNIVERSE comment blocks above.
@@ -49,7 +49,7 @@ SECTORS = {
     "WMT": "Consumer", "COST": "Consumer", "HD": "Consumer", "PG": "Consumer",
     "KO": "Consumer", "MCD": "Consumer", "NKE": "Consumer",
     "XOM": "Energy/Industrial", "CVX": "Energy/Industrial", "CAT": "Energy/Industrial",
-    "SPY": "Benchmark",
+    "SPY": "Benchmark", "MTUM": "Benchmark",
 }
 
 

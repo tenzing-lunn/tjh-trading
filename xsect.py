@@ -253,6 +253,16 @@ def main():
         from backtest import run_backtest
         _, spy_m = run_backtest(spy, spy_pos, ETF_COST)
 
+    # Baseline 1b: hold MTUM (momentum factor ETF) over the identical live window.
+    mtum_close_full = (load_csv('realdata/mtum.csv', warn=False)['close']
+                       if os.path.exists('realdata/mtum.csv') else None)
+    mtum_m = None
+    if mtum_close_full is not None:
+        mtum = mtum_close_full.reindex(window).dropna()
+        mtum_pos = pd.Series(1.0, index=mtum.index)
+        from backtest import run_backtest
+        _, mtum_m = run_backtest(mtum, mtum_pos, ETF_COST)
+
     # Baseline 2: equal-weight ALL eligible names (the universe itself, same costs).
     scores = momentum_12_1(panel)
     rebal = month_end_mask(panel.index)
@@ -297,6 +307,8 @@ def main():
     line('random top-10', m_rand)
     if spy_m is not None:
         line('hold SPY', spy_m)
+    if mtum_m is not None:
+        line('hold MTUM', mtum_m)
 
     # Per-year split: a one-year-wonder is the classic way a fake edge hides.
     print("\nPer-year net return (momentum vs EW universe -- selection skill by year):")
