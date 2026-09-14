@@ -21,7 +21,7 @@ log automatically; the human verdict log is rendered from it.
    dict and call `append_verdict`. One line per real run. (Skip synthetic runs, or tag them
    `synthetic=true` so they never pollute the real track record.)
 3. Add `render_verdict_log.py` (or a `run.py --render-log` flag) that reads `verdicts.jsonl`
-   and regenerates `plan/02-verdict-log.md` as a readable table, newest first. Henry edits only
+   and regenerates `plan/02-verdict-log.md` as a readable table, newest first. Tenzing edits only
    the **judgment** column (real/luck/kill) in a sidecar, never the auto rows.
 4. Gitignore `verdicts.jsonl` if it embeds vendor returns; otherwise keep it (it's just metrics).
 
@@ -29,7 +29,7 @@ log automatically; the human verdict log is rendered from it.
 
 ## Part B — Robustness diagnostics (so a non-expert can SEE "it only worked in 2020")
 **Goal:** surface *why* a result might be fake, as numbers a beginner can read, and auto-raise
-red flags. This is what makes Henry's reframed role possible. Flags GUIDE; they don't decide.
+red flags. This is what makes Tenzing's judgment role possible. Flags GUIDE; they don't decide.
 
 **Status: BUILT — `diagnostics.py`.** Deflated Sharpe (Bailey–López de Prado), per-year
 return+Sharpe, trades/fold, SPY-regime split, and `red_flags()` are implemented and wired into
@@ -56,6 +56,6 @@ section. The Judgment column stays human.
 (Part A) and the web app's red-flag panel.
 
 ## Web app hook (panel ⑤ — see webapp/DESIGN_TARGET.md)
-Render the per-year bars + the red-flag list in the verdict area, so Henry literally sees the
+Render the per-year bars + the red-flag list in the verdict area, so Tenzing literally sees the
 weakness. **The automated flag is a prompt to look closer, not a verdict.** The advance/kill
 call stays human — the app just makes sure a beginner is looking at the right thing.

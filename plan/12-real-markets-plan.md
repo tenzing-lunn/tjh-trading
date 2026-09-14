@@ -129,7 +129,7 @@ historically realistic turnover/costs (t=0.59 at 1200%/yr x 50bps).
 | P1.6 | **Cost-sensitivity sweep.** Rerun the canonical spec at 3, 10, 25 and 50 bps. At what cost does the edge over EW disappear? | A small table in the Thesis 001 writeup | **Haiku 4.5** | A loop over existing `run_panel`; no new math | P0.1 ⇉ |
 | P1.7 | **Red-team Phase 1.** Independently re-derive the key numbers; hunt for lookahead, date misalignment, survivorship leaks, and multiple-testing (was anything picked after looking?) | `research/audits/phase1.md`: every result marked confirmed / wrong / unclear | **Fable 5.1** | Adversarial audit is Fable's highest-value use | P1.2, P1.4, P1.5, P1.6 |
 
-### 🚦 Gate G1 — Humans decide: does momentum go forward? (Tenzing + Jonathan + Henry)
+### 🚦 Gate G1 — Humans decide: does momentum go forward? (Tenzing)
 Criteria **written down now, before seeing the results**:
 1. Long history (P1.2): the top decile beats the market after estimated costs with **t ≥ 2**,
    and no single decade supplies more than half the gain.
@@ -158,7 +158,7 @@ and pick Thesis 002. That's a valid, résumé-worthy result, not a failure.
 
 | ID | Task | Done when | Model | Why this model | Depends on |
 |---|---|---|---|---|---|
-| P3.1 | **Draft the risk policy.** Max account drawdown before stopping (backtest worst was −30.3%, Mar 2020 ≈ $1,200 on $4k), max % per stock and per sector, what "the strategy is broken" means in numbers, and who can restart it | `plan/13-risk-policy.md` drafted; **Jonathan owns and signs** | **Opus 5** | Careful reasoning; the human makes the final call | G1 ⇉ |
+| P3.1 | **Draft the risk policy.** Max account drawdown before stopping (backtest worst was −30.3%, Mar 2020 ≈ $1,200 on $4k), max % per stock and per sector, what "the strategy is broken" means in numbers, and who can restart it | `plan/13-risk-policy.md` drafted; **Tenzing owns and signs** | **Opus 5** | Careful reasoning; the human makes the final call | G1 ⇉ |
 | P3.2 | **Kill switch in code.** `rebalance.py` refuses to trade when the P3.1 limits are breached and says why | A test with a simulated −35% account refuses; a normal account proceeds | **Opus 5** | Safety-critical logic | P2.3, P3.1 |
 | P3.3 | **Sector-concentration report.** Share of each rebalance by sector (the July picks were 4 of 10 tech), using `fetch_universe.SECTORS` | Table per rebalance; flags any sector above the P3.1 cap | **Haiku 4.5** | Simple grouping over existing data | P2.2 ⇉ |
 | P3.4 | **Don't "fix" the choppy-market weakness by curve-fitting.** Any proposed market filter goes through the full walk-forward and counts as extra trials in the deflated Sharpe | Only runs if someone proposes a filter; logged as a new thesis, not a tweak | **Fable 5.1** designs the test, **Opus 5** builds it | Classic self-deception trap | Only if proposed |
@@ -168,7 +168,7 @@ and pick Thesis 002. That's a valid, résumé-worthy result, not a failure.
 | ID | Task | Done when | Model | Why this model | Depends on |
 |---|---|---|---|---|---|
 | P4.1 | **Tax-drag model.** Replay backtest trades as FIFO tax lots and split gains into short-term (<1 yr) vs long-term. Estimate after-tax return for a taxable account vs a tax-advantaged one (e.g. a Roth IRA) under **stated assumed rates**, and flag wash sales | Table: pre-tax vs after-tax vs EW vs SPY. Rates are clearly labeled assumptions, not tax advice | **Opus 5** | Tax-lot logic is fiddly and easy to get subtly wrong | G1 ⇉ |
-| P4.2 | **Real cost table from paper fills.** After ≥3 rebalances, compare journal costs with the 3/1 bps assumption; feed the real numbers back into `costs.py` as a named regime | **Henry signs** the new regime; momentum rerun with it | **Sonnet 5** | Straightforward analysis; the human owns the numbers | P2.4 + paper time |
+| P4.2 | **Real cost table from paper fills.** After ≥3 rebalances, compare journal costs with the 3/1 bps assumption; feed the real numbers back into `costs.py` as a named regime | **Tenzing signs** the new regime; momentum rerun with it | **Sonnet 5** | Straightforward analysis; the human owns the numbers | P2.4 + paper time |
 
 ## Phase 5 — Paper trading and the real-money decision (humans only)
 - **Proposed change to a standing decision:** the old plan said "paper-trade 2+ weeks." With

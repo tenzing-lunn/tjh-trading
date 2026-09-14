@@ -1,18 +1,18 @@
 # 🧭 Algo-Trading Club — Home (Map of Content)
 
 *This is the front door. It links to everything. Start here when you sit down to work.*
-*Three of us (Tenzing, Jonathan, Henry), ~$3–5k of our own money. Two equal goals: learn
-enough to put real work on our résumés, and grow the money without doing anything stupid.*
+*Tenzing's project, ~$3–5k of his own money, run with Claude subagents. Two equal goals: learn
+enough to put real work on his résumé, and grow the money without doing anything stupid.*
 
 Last touched: 2026-07-06. New this session: full unfinished-workflow review — dead code
 (`dashboard.py`, merged `feat/webapp-v1` branch) removed, `plan/03-roadmap` refreshed (was
 stale since 2026-07-02), `Run.md` resynced to `run.py`, and the actual Thesis 001 doc written
-([[research/theses/001-cross-sectional-momentum]]) so Jonathan has something concrete to sign.
+([[research/theses/001-cross-sectional-momentum]]) so Tenzing has something concrete to sign.
 Later the same session: **universe slimmed 97 → 30** (`fetch_universe.py`, quality over
 quantity — see [[plan/01-decision-log]]), and the engine actually **re-run live** on it —
 `xsect.py` and `scan.py` both executed end-to-end, results logged in [[plan/02-verdict-log]].
 Notion also restructured this session (see `notion-import/` in the repo root — beginner
-import guide for Jonathan & Henry).
+import guide, kept for reference).
 See [[plan/01-decision-log]] 2026-07-06.
 
 ---
@@ -27,9 +27,9 @@ See [[plan/01-decision-log]] 2026-07-06.
 3. **Options are paper-only for now.** We model and visualize options (see [[webapp/SPEC]]),
    but no real options money until a strategy survives #1 *in the cheap-option cost regime*.
    Our own harness sends naive options strategies to ~−100%. Respect that.
-4. **No outside money, ever, in the current structure.** We're an investment club (the three
-   of us, our own money, equal say). The Fordham-club ambition is *education/research*, not
-   pooling strangers' capital. See [[plan/00-vision]].
+4. **No outside money, ever, in the current structure.** This is Tenzing's own money, run with
+   Claude subagents. The Fordham-club ambition is *education/research*, not pooling strangers'
+   capital. See [[plan/00-vision]].
 5. **Honesty is the asset.** "We tested 10 things and 9 had no edge" is a *stronger* résumé
    and a better club than one fake winner. The logs do not get edited to flatter us.
 
@@ -55,24 +55,23 @@ See [[plan/01-decision-log]] 2026-07-06.
 
 ### roles/ — who does what
 - [[roles/ROLE_Tenzing]] — engineering / the machine
-- [[roles/ROLE_Jonathan]] — strategy & risk / the offense
-- [[roles/ROLE_Henry]] — costs, execution & measurement / the reality check
 - [[roles/standup-template]] — the recurring update routine (copy per work cycle)
-- [[roles/log-Tenzing]] · [[roles/log-Jonathan]] · [[roles/log-Henry]] — rolling personal logs
+- [[roles/log-Tenzing]] — rolling personal log (`roles/archive/` holds the retired
+  role and log files)
 
 ### research/ — the ideas
 - [[research/_thesis-template]] — copy this for every strategy idea
 - `research/theses/` — one file per hypothesis we test
   - [[research/theses/001-cross-sectional-momentum]] — Thesis 001, **UNPROVEN** (2026-09-14:
     the edge over EW-universe is not statistically distinguishable from luck, t=0.34),
-    **pending Jonathan's signature**
+    **pending Tenzing's signature**
 
 ### notion-import/ — the beginner-friendly front door (2026-07-06)
-A ready-to-import Notion workspace structure for Jonathan & Henry, who haven't used Notion or
-this repo before. Plain-English rewrites of the plan/roles/research pages above — Notion is
-the summary + to-do front door, this repo stays the detailed source of truth. See
-`notion-import/HOW_TO_IMPORT.md` for the one-time import steps. Replaces whatever existed in
-Notion before (see [[plan/01-decision-log]] 2026-07-06 for why it needed restructuring).
+A ready-to-import Notion workspace structure, written for people new to Notion or this repo.
+Plain-English rewrites of the plan/roles/research pages above — Notion is the summary + to-do
+front door, this repo stays the detailed source of truth. See `notion-import/HOW_TO_IMPORT.md`
+for the one-time import steps. Replaces whatever existed in Notion before (see
+[[plan/01-decision-log]] 2026-07-06 for why it needed restructuring).
 
 ### webapp/ — what we're building
 - [[webapp/SPEC]] — the prediction-vs-actual + cost-simulation visualizer

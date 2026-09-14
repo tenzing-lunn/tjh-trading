@@ -24,7 +24,7 @@ keeps the breadth of the 4-prompt approach without inheriting its self-deception
 ## 1. What we trade (scope)
 Liquid US equities & ETFs first (SPY/QQQ/IWM + a handful of liquid large caps), **split/dividend
 adjusted**, daily bars, swing-style holding (days–weeks). Options stay paper-only; intraday is a
-researched phase-2. Universe is Henry's call (liquidity in, junk out). See [[plan/07-charter-what-we-do]].
+researched phase-2. Universe is Tenzing's call (liquidity in, junk out). See [[plan/07-charter-what-we-do]].
 
 ## 2. What a "strategy" is (and the curated library)
 A strategy is a function `(prices, **params) -> position Series in [-1, 1]`, same contract as
@@ -35,7 +35,7 @@ everything in `strategies.py`. The library is **curated, not sprawling**:
 - **Reject** false diversity: Ichimoku / Vortex / TRIX / KAMA etc. are the same trend idea in
   different clothes. Twelve correlated trend variants is not twelve strategies; it's one
   strategy and eleven extra chances to fool ourselves.
-- New families enter the library only with a Jonathan thesis ([[research/_thesis-template]]).
+- New families enter the library only with a written thesis ([[research/_thesis-template]]).
 
 ## 3. How a strategy is TESTED — the four gates (in order)
 Every candidate, whether hand-written or found by a wide scan, runs this gauntlet. The engine
@@ -56,14 +56,14 @@ count `N` next to every Sharpe. "Best of 9,000" is not the same as "good." (Spec
 
 **Gate 4 — Robustness / economic story.** Diagnostics (`diagnostics.py`): per-year & per-fold
 consistency, trade count (flag <30/fold), regime split (up/down/chop). If the edge is one year
-or one regime, it's suspect. AND Jonathan must supply *why the edge exists and who's on the
+or one regime, it's suspect. AND Tenzing must supply *why the edge exists and who's on the
 other side* before we believe it. A green number with no economic story is treated as luck.
 
 Only a candidate that clears **all four** is a "survivor."
 
 ## 4. How a strategy is RUN (the lifecycle)
 ```
- idea ─▶ implement signal ─▶ harness gauntlet (§3) ─▶ verdict auto-logged ─▶ Henry judgment
+ idea ─▶ implement signal ─▶ harness gauntlet (§3) ─▶ verdict auto-logged ─▶ Tenzing judgment
    │                                                          │
    │                                            DEAD ◀────────┤ (the base rate — most die here)
    │                                                          ▼
@@ -72,7 +72,7 @@ Only a candidate that clears **all four** is a "survivor."
                                        real money? = separate deferred decision, never automatic
 ```
 - **Research runs** happen in the terminal: `run.py <ticker.csv>` (and the web app's on-demand
-  API). Every real run auto-appends a verdict row (`verdicts.jsonl`, see plan/10) — Henry adds
+  API). Every real run auto-appends a verdict row (`verdicts.jsonl`, see plan/10) — Tenzing adds
   the *judgment*, not the typing.
 - **Wide scan** — **BUILT (`scan.py`).** Loops the curated library × param grids × the universe
   through the SAME harness, scores buy&hold + random through the identical folds (Gate 2), prints
@@ -88,8 +88,8 @@ Only a candidate that clears **all four** is a "survivor."
   (Gate 3, `diagnostics.py`), and each top name gets auto **red flags** ("92% of return from 2020",
   "only 1 trade/fold") so a beginner SEES why a big number is fake. Compute **~40 ms/backtest, ~4s
   total**; scaling to hundreds of names costs seconds and $0.
-- **Promotion** to paper requires a human sign-off (Jonathan's story + Henry's judgment), not
-  just a green cell.
+- **Promotion** to paper requires a human sign-off (Tenzing's story + judgment, audited by
+  Fable), not just a green cell.
 
 ## 5. What we ADOPT vs REJECT from the 4-prompt pipeline
 | From the video | Verdict | Why |
@@ -111,7 +111,7 @@ Target look = `webapp/MOCKUP.html`; panel spec = [[webapp/DESIGN_TARGET]]. Five 
 3. **Cost sliders** — drag spread/slippage/fee → harness recomputes live.
 4. **Verdict panel** — REAL/DEAD + OOS-net-of-costs, Sharpe, max DD, trades vs benchmark.
 5. **Robustness / red-flag panel** — per-year bars + auto red-flags ("82% of return from 2020",
-   "only 11 trades/fold", "best of 12 configs — deflated Sharpe ~0.2") so a non-expert (Henry)
+   "only 11 trades/fold", "best of 12 configs — deflated Sharpe ~0.2") so a non-expert
    SEES why a result might be fake. Flags guide; the advance/kill call stays human.
 
 **Wide-scan view — BUILT (2026-07-06): the Engine Room (`/engine`).** `scan.py` and `xsect.py`

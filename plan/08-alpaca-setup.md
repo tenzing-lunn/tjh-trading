@@ -2,7 +2,7 @@
 
 Home: [[PROJECT_PLAN]] · Decision: [[plan/01-decision-log]] (2026-06-30 phase-1 scope)
 
-*How the three of us share one Alpaca paper account and feed it into the harness. Paper only.
+*How Tenzing runs one Alpaca paper account and feeds it into the harness. Paper only.
 No real money touches this repo — see the hard rule in `alpaca_paper.py`.*
 
 ## Which API did we sign up for?
@@ -10,12 +10,10 @@ No real money touches this repo — see the hard rule in `alpaca_paper.py`.*
 for *other people* — that's the securities-law problem we already killed. We trade our own
 (paper) money via the Trading API.
 
-## One-time setup (Tenzing does this once, shares with J & H)
+## One-time setup
 1. In the Alpaca dashboard, switch to **Paper Trading** (toggle, top of the dashboard).
 2. Generate **paper API keys** (key id + secret). Copy them immediately — the secret shows once.
 3. Locally: `cp .env.example .env` and paste the two keys into `.env` (gitignored — never commit).
-4. Share the two key lines with Jonathan and Henry over a private channel. All three then run
-   the *same* paper account, so we see one shared simulated portfolio. (Paper = zero legal risk.)
 
 ## Install
 ```bash
@@ -39,7 +37,7 @@ from yfinance only and the account panel says "keys not set" — nothing breaks.
 ## The data → research → paper loop
 ```
 fetch_alpaca.py SPY   ->  spy.csv  ->  run.py spy.csv  ->  read OOS-net-of-costs verdict
-       (data)                              (research, terminal)         (Henry logs it)
+       (data)                              (research, terminal)         (Tenzing logs it)
                                                   |
                               only a SURVIVOR advances to:
                                                   v

@@ -8,7 +8,7 @@ worthless — so correctness matters more than cleverness.
 ## What you own
 - The whole testing pipeline (costs, backtesting, walk-forward validation, strategy code).
 - Data integrity — clean real data, no accidentally peeking at future prices, no junk rows.
-- Turning Jonathan's ideas into actual runnable strategies.
+- Turning strategy ideas into actual runnable strategies.
 - The deployed web app that makes results readable for non-coders.
 
 ## Your actual to-do list, in order
@@ -16,7 +16,7 @@ worthless — so correctness matters more than cleverness.
 2. Export results in a form the app can read.
 3. Build and keep the web app live so anyone can see results without touching code.
 4. Make the whole thing legible for a resume/interview: README, architecture notes, demo flow.
-5. Turn Jonathan's approved ideas into real, running strategies and log every result.
+5. Turn approved ideas into real, running strategies and log every result.
 
 ## How your work is judged
 - **No peeking at the future, ever — structurally, not just by convention.** If this breaks,
@@ -26,7 +26,7 @@ worthless — so correctness matters more than cleverness.
 - **A suspiciously good result is a bug, not a win.** Look for a leak before celebrating.
 
 ## What you're here to learn
-Real collaboration (reviewing J & H's write-ups), building and deploying a real web app, and
+Real collaboration with Claude subagents, building and deploying a real web app, and
 system design — keeping the engine clean as more strategies pile up.
 
 ## The trap for you specifically

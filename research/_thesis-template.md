@@ -1,6 +1,6 @@
 # Strategy Thesis — <NAME>
 
-Home: [[PROJECT_PLAN]] · Author: <Jonathan/Henry> · Status: draft / testing / killed / advanced
+Home: [[PROJECT_PLAN]] · Author: Tenzing · Status: draft / testing / killed / advanced
 
 *Copy this file into `research/theses/<name>.md` for each idea. A thesis with no "Why it
 exists" gets bounced — that's the curve-fitting trap.*
@@ -19,6 +19,6 @@ trade, and why are they willing to lose to us?>
 **My prediction (pre-registered):** <beats buy-and-hold OOS net of costs? yes/no/unsure + why>
 
 ---
-**Result (filled after Tenzing runs it):**
+**Result (filled after the run):**
 - OOS net: __ · vs SPY: __ · Verdict: KILL / ITERATE / ADVANCE
 - What we learned: __

@@ -1,7 +1,7 @@
 # Start Here
 
-Welcome to the algo-trading club workspace. Three of us — Tenzing, Jonathan, Henry — are
-testing whether we can find a real trading edge with our own $3–5k, using an honest,
+Welcome to the algo-trading club workspace. Tenzing is testing whether he can find a real
+trading edge with his own $3–5k, running the project with Claude subagents, using an honest,
 skeptical process instead of guessing. This page is the front door. If you only read one
 page today, read this one.
 
@@ -19,15 +19,15 @@ whole system exists to stop us from fooling ourselves, not to flatter our ideas.
 - We've tested it on real stock data. So far: **zero single-stock timing strategies survive.**
   That's expected and it's the system working correctly.
 - One idea — "buy the stocks that have been winning" (momentum) — looks promising across a
-  30-stock test group, but it's **not yet approved.** It needs Jonathan's and Henry's sign-off
-  before we'd ever paper-trade it, let alone use real money.
+  30-stock test group, but it's **not yet approved.** It needs Tenzing's sign-off
+  before it'd ever be paper-traded, let alone use real money.
 - **Nothing is happening with real money right now, and nothing will until this process says so.**
 
-See the **What To Do Right Now** page for exactly what each of us owes the group.
+See the **What To Do Right Now** page for exactly what's owed to the process.
 
 ## How this workspace is organized
-- **What To Do Right Now** — the only page you need to check every week. Your open items live here.
-- **Roles** — what each of us owns, and why Jonathan's and Henry's jobs can't just be done by AI.
+- **What To Do Right Now** — the only page you need to check every week. Open items live here.
+- **Roles** — what Tenzing owns, and why the judgment calls can't just be done by AI.
 - **Strategy Ideas (Theses)** — every trading idea we've tested, written as a falsifiable claim.
 - **Results So Far** — the track record. Most rows say "no edge" — that's a feature, not a failure.
 - **Roadmap** — what's done, what's next, what's later.

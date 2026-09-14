@@ -1,15 +1,15 @@
 # Strategy Thesis 001 — Cross-Sectional 12-1 Momentum
 
 Home: [[PROJECT_PLAN]] · Author: drafted by Tenzing/Claude from the engine spec, **pending
-Jonathan's signature** · Status: **UNPROVEN — the edge over EW-universe is not statistically
+Tenzing's signature** · Status: **UNPROVEN — the edge over EW-universe is not statistically
 distinguishable from luck (t=0.34); see the 2026-09-14 gate correction below**
 
-*This is the thesis document the process ([[roles/ROLE_Jonathan]], [[roles/standup-template]])
+*This is the thesis document the process ([[roles/ROLE_Tenzing]], [[roles/standup-template]])
 calls for. It was written up AFTER the engine (`xsect.py`) was already built and run — see
 [[plan/01-decision-log]] 2026-07-03 "Thesis 001 engine mismatch resolved" for why the
 sequencing was pragmatic (we needed the panel engine to exist before anyone could test the
-idea at all). Jonathan: read this, then either sign it as-is, amend the economic story, or
-reject the result. Your signature is the missing step — see [[plan/09-status-where-we-are]].*
+idea at all). Tenzing: read this, then either sign it as-is, amend the economic story, or
+reject the result. The signature is the missing step — see [[plan/09-status-where-we-are]].*
 
 ---
 
@@ -36,7 +36,7 @@ clear the same bar as everything else below.
 **How to test it:** `xsect.py` — a purpose-built cross-sectional panel engine (single-name
 `backtest.py` can't score a multi-asset rotation). Spec, locked before looking at sensitivity
 neighbors:
-- Universe: ~97 liquid US stocks (index ETFs excluded — see `EXCLUDE` in `xsect.py`), Henry's
+- Universe: ~97 liquid US stocks (index ETFs excluded — see `EXCLUDE` in `xsect.py`), Tenzing's
   liquidity call via `fetch_universe.py`.
 - Signal: 12-month trailing return, skipping the most recent month (252 trading days back,
   21-day skip) — the canonical academic spec.
@@ -60,9 +60,9 @@ turned out to be unfalsifiable for any long-only basket in a rising market: it c
 selection skill from just owning stocks), or a one-year-wonder pattern (>60% of the *edge over
 EW*, not the raw return, from a single year).
 
-**My prediction (pre-registered):** *[Jonathan — this line is intentionally unfilled. The run
-below already happened (see the engine-mismatch note above), so your "prediction" here is
-really your ex-ante economic judgment read against the result, not a blind guess. Write
+**My prediction (pre-registered):** *[Tenzing — this line is intentionally unfilled. The run
+below already happened (see the engine-mismatch note above), so the "prediction" here is
+really an ex-ante economic judgment read against the result, not a blind guess. Write
 honestly whether you'd have expected this before seeing the numbers, and what you think the
 result is really measuring.]*
 
@@ -129,12 +129,12 @@ the corrected (active-return) regime read on the current universe is different; 
 
 **Status (superseded 2026-09-13, see the 2026-09-14 correction below):** ~~`SURVIVES the panel
 bar; robustness-checked (monthly PSR 1.00, 9/9 sensitivity neighbors beat EW); 1 red flag
-tempers it — pending Jonathan sign-off + paper trading.`~~ Current: `UNPROVEN — the edge over
+tempers it — pending Tenzing sign-off + paper trading.`~~ Current: `UNPROVEN — the edge over
 EW-universe is not statistically distinguishable from luck (t=0.34, need ~2+).`
 
 **Verdict:** **ITERATE → paper?** Not yet ADVANCE. Per [[plan/11-strategy-pipeline]] §3 Gate 4,
-a green number needs Jonathan's economic story AND Henry's judgment before it's believed, and
-per [[plan/07-charter-what-we-do]] nothing goes to paper trading without both.
+a green number needs Tenzing's economic story and judgment before it's believed, and
+per [[plan/07-charter-what-we-do]] nothing goes to paper trading without it.
 
 ## Addendum: robustness cross-check on a different (smaller) universe (2026-07-06)
 
@@ -216,12 +216,12 @@ right). Kill criteria updated in the spec section above: "probabilistic Sharpe <
 "active t-stat vs EW < 2".
 
 ## What we learned
-*[Henry — fill in your judgment here: real edge or survivorship? Any additional flags?]*
-*[Jonathan — fill in here after reviewing: sign, amend, or reject, and why.]*
+*[Tenzing — fill in judgment here: real edge or survivorship? Any additional flags? Sign,
+amend, or reject, and why.]*
 
 ## Next step if signed
-1. Jonathan signs (this file, above).
-2. Henry renders judgment (this file, above). ~~Finish the real cost table~~ Cost sensitivity table now complete (see above).
+1. Tenzing signs (this file, above).
+2. Tenzing renders judgment (this file, above). ~~Finish the real cost table~~ Cost sensitivity table now complete (see above).
 3. Tenzing generates real Alpaca paper API keys (`.env` is currently blank) and starts
    paper-trading this exact spec via `alpaca_paper.py` for 2+ weeks before any further
    discussion of real money — see [[plan/08-alpaca-setup]].
