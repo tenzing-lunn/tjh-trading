@@ -1,9 +1,9 @@
 # 07 — Charter: What We're Doing / What We're Not Doing
 
-Home: [[PROJECT_PLAN]] · Roles: [[roles/ROLE_Tenzing]] · [[roles/ROLE_Jonathan]] · [[roles/ROLE_Henry]]
+Home: [[PROJECT_PLAN]] · Roles: [[roles/ROLE_Tenzing]]
 
-*The one-page answer to "what is this project actually trying to do." If you're Jonathan or
-Henry and you read nothing else, read this. Last set: 2026-06-30.*
+*The one-page answer to "what is this project actually trying to do." If you read nothing
+else, read this. Last set: 2026-06-30.*
 
 ---
 
@@ -26,8 +26,8 @@ same window *after* costs, in our walk-forward test. Until that exists, nothing 
   get paper-traded against live quotes for weeks before anyone discusses real money.
 - **Keeping the $3–5k parked in an index fund** earning the market return until a strategy
   clears the bar. Money is separate from software (see [[plan/01-decision-log]]).
-- **One signal at a time, with an economic reason.** Jonathan writes a thesis (*why* an edge
-  exists), Tenzing builds + runs it, Henry checks it after real costs and logs the verdict.
+- **One signal at a time, with an economic reason.** Tenzing writes a thesis (*why* an edge
+  exists), builds + runs it, checks it after real costs and logs the verdict.
 
 ## What we are NOT doing (and why)
 - **NOT day-trading small caps.** Hardest, most-competitive, worst-data, highest-cost game in
@@ -38,10 +38,8 @@ same window *after* costs, in our walk-forward test. Until that exists, nothing 
 - **NOT chasing strategy quantity.** Running thousands of strategies to find "winners" is the
   multiple-testing trap: some look brilliant by pure luck. We test few, well-reasoned ideas
   and demand each survive out-of-sample net of costs.
-- **NOT pooling outside money / managing strangers' money.** Securities-law exposure. We're an
-  investment club; long-term ambition is a Fordham *research/education* club. (Standing decision.)
-- **NOT pooling the three of us into one live brokerage account.** Same legal problem in
-  miniature. Shared *paper* account is fine (shared API keys); real-money structure is deferred.
+- **NOT pooling outside money / managing strangers' money.** Securities-law exposure. This is
+  Tenzing's own money; long-term ambition is a Fordham *research/education* club. (Standing decision.)
 
 ## Reference facts (verified 2026-06-30)
 - **PDT rule changed.** As of 2026-06-04 (FINRA), the $25k pattern-day-trader minimum is
@@ -55,21 +53,21 @@ same window *after* costs, in our walk-forward test. Until that exists, nothing 
   prices. Use real sources (yfinance, Alpaca data API, Stooq) and let the LLM write the
   fetch *script*, not the numbers.
 
-## Who does what next (so the work spreads off Tenzing)
-**Jonathan (Strategy & Risk):** write the *first real strategy thesis* in `/research/` using the
-template in [[roles/ROLE_Jonathan]] — the claim, *why the edge exists and who's on the other
-side*, why it persists, how to test it, what would kill it, and your pre-registered prediction.
-One good thesis unblocks the whole pipeline. Also draft basic sizing rules (max % of pool per
-position, when to cut a loser).
+## Who does what next
+**Tenzing (Strategy & Risk, with Claude subagents):** write the *first real strategy thesis* in
+`/research/` using the template in [[research/_thesis-template]] — the claim, *why the edge
+exists and who's on the other side*, why it persists, how to test it, what would kill it, and
+a pre-registered prediction. One good thesis unblocks the whole pipeline. Also draft basic
+sizing rules (max % of pool per position, when to cut a loser).
 
-**Henry (Costs & Reality):** build the **real cost table** — realistic spread + slippage + fee
+**Tenzing (Costs & Reality):** build the **real cost table** — realistic spread + slippage + fee
 in bps for (a) liquid ETF, (b) single liquid stock — from actual Alpaca/market numbers, erring
 pessimistic. Define the **tradable universe** (which liquid tickers, what to exclude). These
 feed `costs.py` and decide whether any verdict is real. Own the **verdict log** with the
 "vs SPY over the same window" benchmark on every result.
 
 **Tenzing (Engineering):** load a clean liquid-equity universe (SPY/QQQ/IWM + large caps) via
-`fetch_data.py`; encode Henry's cost table into `costs.py`; implement Jonathan's first thesis as
+`fetch_data.py`; encode the cost table into `costs.py`; implement the first thesis as
 a signal and run the walk-forward; set up the shared Alpaca paper account + API keys. Keep
 shipping the visualizer per [[plan/06-engineering-plan]].
 

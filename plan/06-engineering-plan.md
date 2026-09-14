@@ -105,12 +105,11 @@ Only start these after the deployed app exists.
 - Intraday data experiments.
 - Kronos rerun / intraday branch.
 
-## Inputs from Jonathan and Henry
+## Inputs feeding the engineering system
 
-Jonathan and Henry should feed the engineering system without blocking the first deployed
-app.
+These feed the engineering system without blocking the first deployed app.
 
-### Jonathan → strategy inputs
+### Strategy inputs
 - Written strategy theses from [[research/_thesis-template]].
 - Pre-registered expectation before each run.
 - Plain-English sizing and risk rules.
@@ -118,13 +117,13 @@ app.
 
 Tenzing turns accepted theses into signal functions and visible app scenarios.
 
-### Henry → reality inputs
+### Reality inputs
 - Cost assumptions by instrument.
 - Tradable-universe rules.
 - Benchmark selection and same-window comparison.
 - Verdict-log entries comparing strategies against buy-and-hold / SPY.
 
-Tenzing turns Henry's assumptions into cost regimes, warnings, and verdict panels.
+Tenzing turns these assumptions into cost regimes, warnings, and verdict panels.
 
 ## Future engineering map
 These are captured so they do not distract the current build.

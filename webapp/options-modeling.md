@@ -35,7 +35,7 @@ To answer that faithfully you need, for each day of the trade:
      assumption. Fast, but **label every such result "APPROXIMATE — modeled, not market."**
      Good for teaching the Greeks; not good enough to risk money on.
 3. **Fills/liquidity lie.** Options bid/ask spreads are wide. Assuming you buy/sell at
-   mid-price is the classic self-deception. Henry's pessimistic cost model matters *more*
+   mid-price is the classic self-deception. The pessimistic cost model matters *more*
    here — we assume we cross the spread, not split it.
 4. **Corporate actions, dividends, early assignment, after-hours** — secondary, but real;
    note them, don't drown in them yet.

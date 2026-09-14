@@ -17,7 +17,7 @@ never in JS — the mockup's values are illustrative only.*
 4. **Verdict panel.** Big REAL/DEAD badge + OOS-net-of-costs return, buy-and-hold comparison,
    Sharpe, max drawdown, trades, win rate — straight from `metrics.py`. Plus a display-only
    live quote (clearly "not a recommendation").
-5. **Robustness / red-flag panel (for Henry).** Per-year return bars + an auto-generated list of
+5. **Robustness / red-flag panel.** Per-year return bars + an auto-generated list of
    plain-English red flags ("82% of return came from 2020", "only 11 trades/fold — Sharpe may be
    luck", "best of 12 configs — deflated Sharpe ~0.2"). Lets a non-expert SEE why a result might
    be fake. Computed in Python (`diagnostics.py` — see [[plan/10-verdict-and-diagnostics-spec]]).

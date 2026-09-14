@@ -14,7 +14,7 @@ Notion workspace structure.
 5. Choose **Import → Markdown & CSV**, then select `notion-import.zip`.
 6. Notion will create a page structure matching the folder: top-level pages for each
    numbered file (Start Here, What To Do Right Now, Results So Far, Roadmap, Glossary,
-   Decisions We've Made), and a **"Roles"** page with three sub-pages underneath it, and a
+   Decisions We've Made), and a **"Roles"** page with sub-pages underneath it, and a
    **"Strategy Ideas (Theses)"** page with sub-pages underneath it.
 7. Drag the pages into whatever sidebar order you like — the numbers in the filenames
    (00, 01, 02...) are just there to control the order they import in; feel free to rename
@@ -27,8 +27,8 @@ This Notion structure is the **front door for decisions and to-dos** — it's me
 readable without touching code. The actual engine, data, and detailed research notes live in
 the GitHub repo and are more detailed than what's copied here on purpose (Notion is the
 summary, the repo is the full detail). When something changes:
-- **New strategy idea →** Jonathan adds a new page under "Strategy Ideas (Theses)" using the template.
+- **New strategy idea →** Tenzing adds a new page under "Strategy Ideas (Theses)" using the template.
 - **New test result →** Tenzing adds a row to "Results So Far."
-- **Something gets decided →** whoever made the call adds a line to "Decisions We've Made."
+- **Something gets decided →** Tenzing adds a line to "Decisions We've Made."
 - **A to-do gets done →** cross it off "What To Do Right Now" (this page should almost always
   be short — if it's growing, something is stuck).

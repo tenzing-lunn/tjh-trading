@@ -3,15 +3,15 @@
 Home: [[PROJECT_PLAN]]
 
 ## North star
-Build a small, honest quantitative-research operation that (1) teaches the three of us real,
-defensible skills and (2) grows our own money *only* on edges that survive brutal testing.
+Build a small, honest quantitative-research operation that (1) teaches Tenzing real,
+defensible skills and (2) grows his own money *only* on edges that survive brutal testing.
 The deliverable that matters most is **the machine and the judgment**, not a lucky trade.
 
 ## The three horizons (small → big)
-- **Small (now):** the three of us, our own $3–5k, the backtest harness + a visualizer web
-  app. Prove we can tell a real edge from noise.
-- **Medium:** a clean track record (the verdict log) + a shippable web app = portfolio
-  pieces all three of us can show in interviews.
+- **Small (now):** Tenzing's own $3–5k, the backtest harness + a visualizer web
+  app, run with Claude subagents. Prove we can tell a real edge from noise.
+- **Medium:** a clean track record (the verdict log) + a shippable web app = a portfolio
+  piece Tenzing can show in interviews.
 - **Big (the real ambition):** rebuild the **Fordham quant/research club** into something
   good — a program that brings other students in to do *research and education*. This is the
   legal, scalable version of the "platform" idea. It works because it's about learning and
@@ -28,12 +28,12 @@ The deliverable that matters most is **the machine and the judgment**, not a luc
 5. **Honesty compounds.** A truthful "no edge" record beats a fake winner — for the money
    *and* the résumé.
 
-## Why this is good for each of us (résumé payoff)
-- **Tenzing:** walk-forward engine, time-series transformer (Kronos) integration,
+## Why this is good for Tenzing (résumé payoff)
+- Walk-forward engine, time-series transformer (Kronos) integration,
   Supabase/Vercel app, real Git/MCP/system-design reps.
-- **Jonathan:** turning market intuition into falsifiable hypotheses; position sizing & risk.
-- **Henry:** cost modeling, benchmarking, honest performance measurement.
-- **All three:** "co-built and ran a quant research program" >> "we tried to day-trade."
+- Turning market intuition into falsifiable hypotheses; position sizing & risk.
+- Cost modeling, benchmarking, honest performance measurement.
+- "Built and ran a quant research program" >> "tried to day-trade."
 
 ## To develop (talk through later)
 - Concrete Fordham-club plan: structure, faculty sponsor, onboarding, what members build.

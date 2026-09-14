@@ -76,8 +76,8 @@ stretch" catches above still stand and are now joined by this one. Bottom line: 
 **not** been shown to work — it needs either a longer/different test or to be set aside.
 
 ## What's needed before this goes any further
-1. Jonathan reviews the economic reasoning above and signs off, amends it, or rejects it.
-2. Henry reviews whether this looks like a real edge or a survivorship illusion, and
+1. Tenzing reviews the economic reasoning above and signs off, amends it, or rejects it.
+2. Tenzing reviews whether this looks like a real edge or a survivorship illusion, and
    finalizes the real cost assumptions being used.
-3. Only after both sign off: Tenzing sets up a real (but fake-money/paper) trading account and
+3. Only after signing off: Tenzing sets up a real (but fake-money/paper) trading account and
    runs this idea for 2+ weeks before there's any further conversation about real money.

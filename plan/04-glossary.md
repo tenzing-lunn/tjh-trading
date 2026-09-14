@@ -2,8 +2,8 @@
 
 Home: [[PROJECT_PLAN]]
 
-*Shared vocabulary so Jonathan and Henry (and future club members) are never lost in
-Tenzing's code, and Tenzing isn't lost in their finance terms. Add terms as they come up.*
+*Shared vocabulary so future club members are never lost in the code, and finance terms are
+never a barrier either way. Add terms as they come up.*
 
 ## Backtesting / our machine
 - **Out-of-sample (OOS):** tested on data the strategy's parameters were NOT chosen on. The

@@ -8,6 +8,27 @@ When a decision changes, add a NEW entry that supersedes the old one (don't dele
 
 ---
 
+### 2026-09-14 — Jonathan and Henry are no longer part of this project; Tenzing runs it with Claude subagents
+**Decision:** Jonathan and Henry are subtracted from the idea of the project — they never
+produced theses, so their work is not being run. This is now Tenzing's project, run with
+Claude subagents (the model roster in [[plan/12-real-markets-plan]]: Fable 5.1 for audits,
+Opus 5 for the core engine, Sonnet 5 for features/docs, Haiku 4.5 for simple tasks). Every
+human gate/sign-off previously written as "Tenzing + Jonathan + Henry," "Jonathan signs,"
+"Henry signs," "Jonathan writes the thesis," or "Henry checks costs / logs verdicts" is now
+**Tenzing** — theses are written by Tenzing with Claude, pre-registered before results are
+seen, and the Fable audit remains the independent check. "The three of us" becomes Tenzing.
+This entry **supersedes the roles/ratification parts** of every earlier decision below (e.g.
+"to be ratified with Jonathan & Henry," "pending Jonathan's signature," "Henry to ratify," and
+the "Jonathan and Henry to ratify at G2" line in the entry immediately below) — the underlying
+engineering/research decisions themselves stand unchanged. Their old role and log files are
+archived, not deleted, at `roles/archive/` and `notion-import/02 - Roles/archive/`.
+**Why:** Neither ever produced a strategy thesis or a cost/universe ratification in the roles
+they were assigned; carrying two placeholder human gates that never fire was blocking the
+pipeline for no reason. Tenzing, directing Claude subagents (with Fable's audits as the
+independent check this project always required), can own both the offense and the reality-check
+roles directly.
+**Who:** Tenzing, 2026-09-14.
+
 ### 2026-09-14 — Scope moves to short-term (intraday + swing); 15-minute delay simulated, realtime feed deferred
 **Decision:** Strategy horizon is now **minutes → ~2 weeks**. Intraday is in scope, which
 supersedes the 2026-07-02 "park Kronos" decision. Data source: Alpaca's free SIP minute bars

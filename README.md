@@ -4,12 +4,12 @@
 first load can take ~30s to wake up)
 
 ## What this is, in one paragraph
-Three college students (Tenzing, Jonathan, Henry) wanted to trade with a few thousand dollars
-of their own money *without fooling themselves*. So instead of guessing at trades, we built a
-machine that tests trading ideas against about 8 years of real stock prices. It charges
-realistic trading costs and only grades an idea on data it has never seen. The machine's job
-is to **kill bad ideas**. Most ideas die, and that's the point: it means the machine isn't
-flattering us.
+Tenzing wanted to trade a few thousand dollars of his own money *without fooling himself*. So
+instead of guessing at trades, this project built a machine that tests trading ideas against
+about 8 years of real stock prices, run with Claude subagents doing the engineering, research,
+and auditing. It charges realistic trading costs and only grades an idea on data it has never
+seen. The machine's job is to **kill bad ideas**. Most ideas die, and that's the point: it
+means the machine isn't flattering us.
 
 ## The one rule
 > An idea is only "real" if it beats the dumb options (just buy the stock and hold it, or
@@ -141,8 +141,8 @@ must pass before the next one starts, and **people, not code, decide** at each g
 | **0. Fix the machine** | Add the check that caught this: does a strategy beat "own everything equally" by more than luck? Audit the other checks for the same blind spot. | The machine's verdict matches the finding above |
 | **1. Prove it** | Test momentum over ~100 years of free academic data (Ken French's library). Retest on a stock list with no hindsight (stocks that were in the S&P 500 *at the time*, including ones that later failed). Compare against MTUM, an existing momentum ETF. Find the trading cost at which the edge disappears. An independent audit follows. | **G1 (team):** it beats the alternatives by more than luck in all of these, or we drop it and move to the next idea |
 | **2. Make it runnable (fake money only)** | Daily data refresh, a "what to hold this month" report, a script that turns that into Alpaca **paper** orders (dry run by default, and it refuses anything but the paper account), a trade journal, tests, and a safety audit. | Audit passes |
-| **3. Risk rules** | Written limits: max loss before stopping, max per stock and per sector, what "broken" means. Plus a kill switch in code that refuses to trade past those limits. | Jonathan signs the policy |
-| **4. Real-world costs** | Model taxes (monthly trading creates short-term gains) and measure real trading costs from paper fills. | Henry signs the real cost numbers |
+| **3. Risk rules** | Written limits: max loss before stopping, max per stock and per sector, what "broken" means. Plus a kill switch in code that refuses to trade past those limits. | Tenzing signs the policy |
+| **4. Real-world costs** | Model taxes (monthly trading creates short-term gains) and measure real trading costs from paper fills. | Tenzing signs the real cost numbers |
 | **5. Paper trade** | At least 3 monthly rebalances with fake money, comparing results with what the backtest predicted. | **G2 (team):** results in the expected range. Real money is a separate, later decision |
 
 **Who builds it:** the work is split across Claude models by difficulty. **Fable 5.1**

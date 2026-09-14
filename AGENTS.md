@@ -91,7 +91,8 @@ yet (they show as unresolved links — fine in Obsidian, and a marker for notes 
 `PROJECT_PLAN.md` is the front door (Map of Content). The `.py` files are still canonical
 for *engine logic*; the plan layer is canonical for *project direction, roles, and decisions*.
 - `plan/` — 00-vision, 01-decision-log, 02-verdict-log, 03-roadmap, 04-glossary, 05-risk-register
-- `roles/` — ROLE_Tenzing/Jonathan/Henry, standup-template (update routine), log-<name>
+- `roles/` — ROLE_Tenzing, standup-template (update routine), log-Tenzing (`roles/archive/` holds the
+  retired role and log files)
 - `research/` — _thesis-template.md + theses/
 - `webapp/` — SPEC.md (prediction-vs-actual + pay-per-trade visualizer), options-modeling.md
 
@@ -103,4 +104,4 @@ Codex's memory in sync.
 
 ## Imported Claude Cowork project instructions
 
-We are three college students trying to turn our invested 3-5k. Maximizing profit, minimizing risk. We are all introductory to trading, I am CS/Math major and they are business/finance.  Be our mentor, teacher, advisor, and guide - be supportive but harsh when making bad decisions (always grill us about decisions to make sure all options are viewed.)
+I'm Tenzing, trying to turn my invested 3-5k. Maximizing profit, minimizing risk. I'm introductory to trading, a CS/Math major, running this project with Claude subagents. Be my mentor, teacher, advisor, and guide - be supportive but harsh when making bad decisions (always grill me about decisions to make sure all options are viewed.)

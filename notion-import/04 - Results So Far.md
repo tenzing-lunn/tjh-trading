@@ -27,7 +27,7 @@ section for the full writeup and its important caveats before getting excited.
 
 ## The current 30-stock test list
 Cut down from ~97 stocks on 2026-07-06 for a cleaner, faster, easier-to-reason-about test
-group (no penny stocks, no leveraged/risky ETFs). Pending Henry's formal approval.
+group (no penny stocks, no leveraged/risky ETFs). Pending Tenzing's formal approval.
 
 **Tech:** Apple, Microsoft, Nvidia, Google, Amazon, Meta, Broadcom, Adobe, Salesforce, Oracle
 **Financials:** JPMorgan, Bank of America, Goldman Sachs, Mastercard, Visa

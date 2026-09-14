@@ -4,14 +4,14 @@ See [[PROJECT_PLAN]] for the shared context. This is *your* lane only.
 
 ## Your one-line mission
 Own the machine that decides what's real: the backtest harness, the data, the signals, and
-the dashboard the other two read. If the code lies or peeks at the future, the whole club's
+the dashboard. If the code lies or peeks at the future, the whole project's
 work is worthless — so your bar is correctness, not cleverness.
 
 ## What you own
 - The whole `.py` pipeline (`costs.py`, `backtest.py`, `walkforward.py`, `strategies.py`,
   `data.py`, `forecast_kronos.py`, `run.py`).
 - Data integrity (clean real data, no lookahead, no junk rows).
-- Turning Jonathan's strategy theses into actual signal functions and running them.
+- Turning strategy theses into actual signal functions and running them.
 - The deployed web app that makes results legible to non-coders.
 - The engineering roadmap in [[plan/06-engineering-plan]].
 
@@ -32,7 +32,7 @@ for a deployed web app, not a perfect research platform.
 5. **Run Kronos for real.** Locally, not `--mock`, on all six tickers. Read the
    OOS-net-of-costs walk-forward row and write the result in the verdict log. This informs
    the research story but does not block app v1.
-6. **Implement accepted strategy theses.** When Jonathan hands you a real thesis, turn it
+6. **Implement accepted strategy theses.** When a real thesis is written, turn it
    into `(prices, **kw) -> position Series in [-1,1]`, run it, and verdict-log it.
 7. **Fill the missing Obsidian notes:** [[Strategies]], [[Metrics]], [[Data]],
    [[Walkforward]] (currently unresolved wikilinks). Keeps the `.py` ↔ notes in sync.
@@ -46,15 +46,15 @@ for a deployed web app, not a perfect research platform.
   leak first.
 
 ## What you're here to learn (your CLAUDE.md goals, applied)
-Git/GitHub collaboration (you're the one reviewing J & H's markdown PRs), Supabase (RLS,
-edge functions, migrations) and Vercel via the dashboard, MCP wiring (Robinhood data),
-and system design — keeping the harness modular as strategies pile up.
+Git/GitHub collaboration, Supabase (RLS, edge functions, migrations) and Vercel via the
+dashboard, MCP wiring (Robinhood data), and system design — keeping the harness modular as
+strategies pile up.
 
 ## Your handoffs
-- **From Jonathan:** a written thesis + sizing rules → you turn it into a signal + run it.
-- **From Henry:** the real cost numbers per instrument → you plug them into `costs.py`'s
-  regimes so the verdict reflects reality, not a guess.
-- **To both:** the deployed app + verdict log, so non-coders can see what survived.
+- **To yourself, across roles:** a written thesis + sizing rules → turn it into a signal + run
+  it; the real cost numbers per instrument → plug them into `costs.py`'s regimes so the
+  verdict reflects reality, not a guess.
+- **To everyone else:** the deployed app + verdict log, so non-coders can see what survived.
 
 ## The trap for you specifically
 You can build anything, so you'll be tempted to add features (more signals, fancier model,

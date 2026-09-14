@@ -66,7 +66,7 @@ def load_kronos_forecast(path):
 
 def log_wf_verdict(strategy, px, combined, chosen, grid, trial_sharpes, m, path):
     """Append one machine-readable verdict row (plan/10 Part A). Records only what the
-    engine already computed; the judgment column stays human (Henry's)."""
+    engine already computed; the judgment column stays human (Tenzing's)."""
     if len(combined) == 0:
         return
     lo, hi = combined.index[0], combined.index[-1]

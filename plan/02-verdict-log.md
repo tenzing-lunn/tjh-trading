@@ -1,6 +1,6 @@
 # 02 — Verdict Log (the track record)
 
-Home: [[PROJECT_PLAN]] · Owner: **Henry** (with Tenzing's harness output)
+Home: [[PROJECT_PLAN]] · Owner: **Tenzing** (harness output + judgment)
 
 *This is the club's actual research record and our most valuable asset. One row per test.
 Newest first. The point is honesty: most rows will say "no edge." That's the truth working.*
@@ -30,11 +30,11 @@ Newest first. The point is honesty: most rows will say "no edge." That's the tru
 Every real `run.py <ticker.csv>` walk-forward now auto-appends to `verdicts.jsonl`
 (`verdict_log.py`, plan/10 Part A). Render it here with
 `python3 verdict_log.py --write-md plan/02-verdict-log.md` — the table lands below the
-marker; everything above stays human-owned. Henry fills only the **Judgment** column.
+marker; everything above stays human-owned. Tenzing fills only the **Judgment** column.
 
 <!-- AUTO-VERDICTS BELOW: rendered by verdict_log.py, do not hand-edit -->
 
-| Date | Strategy | Data | Cost regime | OOS net | OOS Sharpe | vs B&H | vs SPY | Flags | Judgment (Henry) |
+| Date | Strategy | Data | Cost regime | OOS net | OOS Sharpe | vs B&H | vs SPY | Flags | Judgment (Tenzing) |
 |------|----------|------|-------------|---------|-----------|--------|--------|-------|------------------|
 | 2026-09-14 | meanrev_wf | aapl | 3/1 bps (liquid ETF) | -0.9% | 0.08 | -417.6% (t=-2.2) | +170.7% | 2 flag(s) | |
 | 2026-07-11 | xsect_momentum_12_1 | panel_30 | 3/1 bps (liquid ETF) | +309.4% | 0.99 | BEAT | +179.7% | 1 flag(s) | |

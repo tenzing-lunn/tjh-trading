@@ -11,7 +11,7 @@ strategies lose almost everything to fees and time decay. Being right about dire
 enough — see the Glossary's "theta decay."
 
 ## 2. No outside money, ever, in the current structure
-This is the three of us and our own money, with equal say. We're not building something where
+This is Tenzing's own money, run with Claude subagents. We're not building something where
 strangers give us money to manage — that would make us an unregistered investment fund, which
 is a legal problem we don't need. If we ever build a club, it's an education/research club
 (the "Fordham club" idea), not a fund.
