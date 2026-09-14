@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
-from alpaca.data.enums import Adjustment
+from alpaca.data.enums import Adjustment, DataFeed
 
 
 def main():
@@ -32,10 +32,14 @@ def main():
         sys.exit("Set APCA_API_KEY_ID and APCA_API_SECRET_KEY in your environment first.")
 
     client = StockHistoricalDataClient(key, secret)
+    # Cap end at (now - 16 minutes) to avoid "subscription does not permit querying recent SIP data"
+    end = datetime.utcnow() - timedelta(minutes=16)
     req = StockBarsRequest(
         symbol_or_symbols=sym,
         timeframe=TimeFrame.Day,
         start=start,
+        end=end,
+        feed=DataFeed.SIP,                  # SIP = all exchanges (vs IEX ~2.5% of volume)
         adjustment=Adjustment.ALL,          # splits + dividends -> no fake jumps
     )
     df = client.get_stock_bars(req).df
