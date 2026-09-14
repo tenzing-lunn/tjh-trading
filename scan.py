@@ -46,6 +46,13 @@ from walkforward import walk_forward
 from diagnostics import (diagnose, config_sharpes, active_returns, active_deflated_sharpe,
                          deflated_sharpe_ratio)
 from verdict_log import append_verdict, scan_row_to_record
+import ledger
+
+# The experiment-ledger research question this scan belongs to (plan/14 I1.6): every
+# (ticker, strategy) look here, and every real-CSV single-ticker look via run.py, share
+# this family so the multiple-testing count reflects ALL trials ever tried, not just
+# this run's.
+LEDGER_FAMILY = "single-name-daily-scan"
 
 # The truth-for-equities regime. Frictionless is a lie; options are a separate study.
 ETF_COST = CostModel(spread_bps=3, slippage_bps=1)
@@ -135,7 +142,7 @@ def _binding_dsr(r):
     return float('nan') if any(v != v for v in vals) else float(min(vals))
 
 
-def scan_universe(paths, benchmark=None, cost_model=ETF_COST, n_folds=N_FOLDS):
+def scan_universe(paths, benchmark=None, cost_model=ETF_COST, n_folds=N_FOLDS, log_ledger=False):
     """Loop the curated library over a universe. Returns a list of result dicts, one per
     (ticker, candidate strategy), each carrying its OOS-net-of-costs metrics AND the
     significance of its edge over the two benchmarks it is measured against: the ticker's
@@ -195,14 +202,25 @@ def scan_universe(paths, benchmark=None, cost_model=ETF_COST, n_folds=N_FOLDS):
                 'trades_per_fold': tpf, 'thin': tpf < MIN_TRADES_PER_FOLD,
             })
             actives.append(active_returns(combined, bh_comb).values)
+            # Ledger it BEFORE the discount below is computed, so a fresh ledger's count
+            # for this run equals len(rows) exactly (first-run numbers stay identical).
+            # Only the CLI writes; the live Engine Room and the export re-run the same
+            # configs on every request and would otherwise bloat the ledger.
+            if log_ledger:
+                ledger.log_experiment(LEDGER_FAMILY, strat, grid, ticker, data_paths=[path],
+                                      result={'total_return': m['total_return'],
+                                              'sharpe': m['sharpe']})
 
     # ---- Gate 3, levied ONCE, on the N a HUMAN actually searches ------------------------
     # The selection that really happens is reading the best of these len(rows) OOS results.
     # (The grid N stays in the printed N column to document the search; charging it there
     #  would be a category error -- walk-forward already removed that selection bias.)
+    # N is raised to the LEDGER's count for this family when it exceeds len(rows) -- a
+    # variant tried in an earlier session, or via run.py on some other ticker, still counts.
     trial_act = [r['active_sharpe_vs_bh'] for r in rows]
     for r, a in zip(rows, actives):
-        r['dsr_scan'] = deflated_sharpe_ratio(a, n_trials=len(rows), trial_sharpes=trial_act)
+        r['dsr_scan'] = deflated_sharpe_ratio(a, n_trials=len(rows), trial_sharpes=trial_act,
+                                              family=LEDGER_FAMILY)
         r['dsr'] = _binding_dsr(r)              # the gate that binds (also the legacy key)
         r['significant'] = (_ge(r['dsr_vs_bh'], DSR_BAR) and _ge(r['dsr_vs_spy'], DSR_BAR)
                             and _ge(r['dsr_scan'], DSR_BAR))
@@ -261,7 +279,7 @@ def main():
         benchmark = load_csv('realdata/spy.csv', warn=False)['close']
 
     t0 = time.time()
-    rows = scan_universe(paths, benchmark=benchmark)
+    rows = scan_universe(paths, benchmark=benchmark, log_ledger=True)
     elapsed = time.time() - t0
 
     tickers = sorted({r['ticker'] for r in rows})
@@ -281,6 +299,13 @@ def main():
     suspects = [r for r in rows if r['survives_gate2'] and not r['clean']]
     print(f"RESULT: {len(edges)} EDGE?  |  {len(suspects)} suspect  |  "
           f"{len(rows) - len(edges) - len(suspects)} dead   (of {len(rows)})\n")
+
+    # N actually charged for the scan-wide multiple-testing discount (plan/14 I1.6): the
+    # ledger's count for this family, which can only be >= this run's own row count.
+    n_used = ledger.trial_count(LEDGER_FAMILY)
+    ledger_note = (f" (ledger \"{LEDGER_FAMILY}\": {n_used} distinct configs ever tried, "
+                  f"including earlier sessions)" if n_used > len(rows) else "")
+    print(f"N used for the scan-wide deflated Sharpe: {max(n_used, len(rows))}{ledger_note}\n")
 
     # Record the rows that warrant a human look (edges + gate-2 survivors) into the
     # verdict log. The 80-odd dead backtests are the expected base rate, not a track record;
@@ -320,7 +345,7 @@ def main():
               f"OOS {_pct(top['metrics']['total_return'])} net, active {_pct(top['active_return_vs_bh'])} "
               f"over its own buy&hold, {top['trades_per_fold']:.0f} trades/fold, "
               f"active DSR {top['dsr_vs_bh']:.2f} vs B&H / {top['dsr_vs_spy']:.2f} vs SPY / "
-              f"{top['dsr_scan']:.2f} after the {len(rows)}-row scan discount, "
+              f"{top['dsr_scan']:.2f} after the N={max(n_used, len(rows))} scan discount, "
               f"beating {top['rand_pct'] * 100:.0f}% of matched coin flips.")
         print("  It cleared Gates 1-3 (costs, OOS active-vs-benchmark, multiple-testing). Before")
         print("  it is believed it STILL needs Gate 4: a pre-registered thesis for WHY the edge exists")
@@ -329,7 +354,7 @@ def main():
         print(f"No clean survivor in {len(rows)} backtests across {len(tickers)} liquid names.")
         print("No strategy's edge OVER its benchmark -- its own buy&hold AND holding SPY, same")
         print("folds, same costs -- is distinguishable from luck, once the best-of-N discount")
-        print(f"for the {len(rows)} results a human reads in this table is charged.")
+        print(f"for the N={max(n_used, len(rows))} configs ever tried in this family is charged.")
         print("That is the honest base rate: on liquid daily bars, simple timing rules do not")
         print("beat just holding the index. The scan did its job by refusing a fake winner.")
     print("* thin = fewer than 30 trades/fold; treat its Sharpe as noise.")

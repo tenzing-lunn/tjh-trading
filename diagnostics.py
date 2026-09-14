@@ -79,7 +79,18 @@ def _moments(x):
 
 
 # ---- deflated Sharpe --------------------------------------------------------------------
-def deflated_sharpe_ratio(net, n_trials, trial_sharpes=None, ppy=None):
+def effective_n_trials(n_trials, family=None):
+    """The N actually charged for the multiple-testing discount: never less than the
+    caller's own count, and never less than what the ledger has ever recorded for this
+    research question -- so a variant tried in an earlier session, or a different script,
+    still counts. `family` None -> exactly `n_trials` (today's behaviour, unchanged)."""
+    if family is None:
+        return n_trials
+    import ledger
+    return max(n_trials, ledger.trial_count(family))
+
+
+def deflated_sharpe_ratio(net, n_trials, trial_sharpes=None, ppy=None, family=None):
     """P(the OOS Sharpe is real, not the luckiest of `n_trials`). In [0,1]; >=0.95 = significant.
 
     net           : OOS net (per-bar) returns -- array, or a Series with a DatetimeIndex.
@@ -90,7 +101,11 @@ def deflated_sharpe_ratio(net, n_trials, trial_sharpes=None, ppy=None):
     ppy           : only used to de-annualize `trial_sharpes`. None -> inferred from `net`'s
                     DatetimeIndex; for an index-less array it falls back to DAILY_PPY (252),
                     the legacy daily convention -- NON-DAILY ARRAY CALLERS MUST PASS ppy.
+    family        : research-question name in the experiment ledger (see ledger.py). When
+                    given, `n_trials` is raised to `effective_n_trials(n_trials, family)` so
+                    a caller can never under-report N. None (default) -> unchanged behaviour.
     """
+    n_trials = effective_n_trials(n_trials, family)
     if ppy is None and trial_sharpes is not None and len(np.asarray(trial_sharpes)) > 1:
         idx = getattr(net, 'index', None)
         ppy = infer_ppy(idx) if isinstance(idx, pd.DatetimeIndex) else DAILY_PPY
@@ -152,15 +167,19 @@ def config_active_sharpes(px, fn, grid, cost_model, bench_pos, ppy=None):
     return out
 
 
-def active_deflated_sharpe(strat_df, bench_df, n_trials, trial_active_sharpes=None, ppy=None):
+def active_deflated_sharpe(strat_df, bench_df, n_trials, trial_active_sharpes=None, ppy=None,
+                           family=None):
     """P(the strategy's edge OVER the benchmark is real, not the luckiest of `n_trials`).
     This is the number a gate may consume; `deflated_sharpe_ratio` (vs zero) is display only.
 
     `trial_active_sharpes` must be ACTIVE Sharpes (see `config_active_sharpes`) or the null
     threshold is in the wrong units. NaN when the active series has no variance -- a strategy
-    identical to its benchmark has no edge to test (B&H vs B&H is NaN, not 0.5)."""
+    identical to its benchmark has no edge to test (B&H vs B&H is NaN, not 0.5).
+
+    `family`: see `deflated_sharpe_ratio` -- raises `n_trials` to the ledger's count for
+    this research question when it exceeds the caller's own."""
     return deflated_sharpe_ratio(active_returns(strat_df, bench_df),   # Series: ppy inferable
-                                 n_trials, trial_active_sharpes, ppy)
+                                 n_trials, trial_active_sharpes, ppy, family=family)
 
 
 # ---- consistency: per-year, regime ------------------------------------------------------
@@ -255,10 +274,12 @@ def red_flags(metrics, diag):
     if 'deflated_sharpe_active' in diag:
         dsa = diag['deflated_sharpe_active']
         if dsa is not None and dsa == dsa and dsa < 0.95:
-            out.append(f"Edge over the benchmark: active deflated Sharpe {dsa:.2f} "
+            n_a = diag.get('n_trials_active_used', 1)
+            n_note = f" (N={n_a}, ledger-informed)" if n_a > 1 else ""
+            out.append(f"Edge over the benchmark: active deflated Sharpe {dsa:.2f}{n_note} "
                        f"(<0.95 => not distinguishable from luck).")
     else:
-        dsr, n = diag.get('deflated_sharpe'), diag.get('n_trials')
+        dsr, n = diag.get('deflated_sharpe'), diag.get('n_trials_used', diag.get('n_trials'))
         if dsr is not None and dsr == dsr and dsr < 0.95:
             out.append(f"Best of {n} configs -- deflated Sharpe {dsr:.2f} (<0.95 => not "
                        f"distinguishable from luck).")
@@ -296,7 +317,7 @@ def red_flags(metrics, diag):
 
 
 def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=None,
-             bench_df=None, trial_active_sharpes=None):
+             bench_df=None, trial_active_sharpes=None, family=None):
     """Full diagnostics dict for one walk-forward OOS result (`oos` = walk_forward's combined
     DataFrame with a 'net' column). Assembles per-year, deflated Sharpe, regime split, and
     the red-flag list. This is what the web app's panel (5) and the verdict log consume.
@@ -307,7 +328,13 @@ def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=N
     and the per-year / regime cells carry their ACTIVE counterparts, which is what switches
     the one-year-wonder and regime red flags from "did it make money" to "did it beat the
     benchmark". Without it every flag stays on raw return, exactly as before.
-    `ppy` None -> inferred once from oos.index and passed to everything below."""
+    `ppy` None -> inferred once from oos.index and passed to everything below.
+    `family` (optional): the experiment-ledger research question (see ledger.py). Only
+    affects `deflated_sharpe_active` (the number a gate may consume) -- the raw vs-ZERO
+    `deflated_sharpe` stays keyed to the grid actually searched here (a different
+    multiple-testing axis: WHICH params within this one candidate, not how many different
+    tickers/strategies a human has looked at). `diag['n_trials_active_used']` records the N
+    actually charged to the active leg, for printing."""
     if ppy is None:
         ppy = infer_ppy(oos.index)
     m = compute_metrics(oos, ppy)
@@ -331,9 +358,11 @@ def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=N
         # on this axis (params were picked on TRAIN only), so the active edge owes no
         # best-of-N discount here -- scan.py's own gate charges 1 for the same reason. At
         # n=1 the trial-Sharpe dispersion is irrelevant (_expected_max_z(1) == 0), so
-        # `trial_active_sharpes` is deliberately not passed through.
+        # `trial_active_sharpes` is deliberately not passed through. `family` can still
+        # raise it, e.g. run.py's ad hoc single-ticker looks joining the wide-scan count.
+        diag['n_trials_active_used'] = effective_n_trials(1, family)
         diag['deflated_sharpe_active'] = active_deflated_sharpe(
-            oos, bench_df, 1, None, ppy)
+            oos, bench_df, 1, None, ppy, family=family)
     diag['red_flags'] = red_flags(m, diag)
     return diag
 

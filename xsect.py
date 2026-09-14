@@ -33,9 +33,13 @@ import pandas as pd
 from costs import CostModel
 from data import load_csv
 from metrics import compute_metrics
-from diagnostics import deflated_sharpe_ratio, regime_split
+from diagnostics import deflated_sharpe_ratio, regime_split, effective_n_trials
 from verdict_log import append_verdict
 import power
+import ledger
+
+# The experiment-ledger research question this panel belongs to (plan/14 I1.6).
+LEDGER_FAMILY = "thesis-001-xsect"
 
 ETF_COST = CostModel(spread_bps=3, slippage_bps=1)
 # The benchmark and pure index/leveraged products are not cross-sectional candidates.
@@ -148,7 +152,7 @@ def _ew_weights(panel, lookback, eligible=None):
     return w.ffill().fillna(0.0)
 
 
-def robustness(res, spy_close, ew_res=None):
+def robustness(res, spy_close, ew_res=None, family=LEDGER_FAMILY):
     """The scan's gauntlet applied to one panel result -> {psr, months, regimes, flags}.
     Shared by the CLI and the track-record export so both tell the SAME story. Probabilistic
     Sharpe is scored on MONTHLY returns (a monthly strategy: daily bars would count ~21
@@ -160,7 +164,12 @@ def robustness(res, spy_close, ew_res=None):
     With it, `psr` becomes the ACTIVE PSR -- P(the edge over the EW-universe is > 0) -- and
     the one-year / regime flags read the active series too. `psr` is deliberately an ALIAS
     for the honest number so every existing consumer gets it without changing; `psr_raw` and
-    `psr_active` are also returned for anyone who wants to see both."""
+    `psr_active` are also returned for anyone who wants to see both.
+
+    `family`: experiment-ledger research question (see ledger.py). Defaults to Thesis 001's
+    family so the CLI, the live Engine Room and the export all charge the SAME N to the
+    active PSR. Only the active (gate) number is ledger-informed; `psr_raw` is reference-only
+    and stays P(Sharpe > 0)."""
     monthly = _monthly_returns(res['net'])
     psr_raw = deflated_sharpe_ratio(monthly.values, n_trials=1, ppy=12)  # n=1 => P(Sharpe > 0)
     psr_active = float('nan')
@@ -168,14 +177,16 @@ def robustness(res, spy_close, ew_res=None):
     if ew_res is not None:
         bench_net = ew_res['net']
         active = (monthly - _monthly_returns(bench_net)).dropna()
-        psr_active = deflated_sharpe_ratio(active.values, n_trials=1, ppy=12)
+        psr_active = deflated_sharpe_ratio(active.values, n_trials=1, ppy=12, family=family)
     psr = psr_active if ew_res is not None else psr_raw
     regimes = (regime_split(res['net'], spy_close, bench_net=bench_net)
                if spy_close is not None else None)
     flags = []
     if psr == psr and psr < 0.95:
-        flags.append(f"Probabilistic Sharpe {psr:.2f} < 0.95 -- not clearly distinguishable from "
-                     + ("the EW-universe." if ew_res is not None else "zero."))
+        n_used = effective_n_trials(1, family)
+        n_note = f" (N={n_used}, ledger-informed)" if n_used > 1 else ""
+        flags.append(f"Probabilistic Sharpe {psr:.2f}{n_note} < 0.95 -- not clearly distinguishable "
+                     "from " + ("the EW-universe." if ew_res is not None else "zero."))
     # The EDGE by year, not the return by year: raw return is mostly beta, spread across
     # every year, so a one-year edge hides behind it (audit 3.1).
     yearly = []
@@ -214,6 +225,7 @@ def robustness(res, spy_close, ew_res=None):
                 flags.append(f"Loses in the '{worst}' regime ({_pct(regimes[worst]['return']).strip()}) "
                              f"-- momentum leans on 'up' markets and whipsaws in chop, not all-weather.")
     return {'psr': psr, 'psr_raw': psr_raw, 'psr_active': psr_active,
+            'n_trials_used': effective_n_trials(1, family),
             'months': int(len(monthly)), 'regimes': regimes, 'flags': flags}
 
 
@@ -439,6 +451,13 @@ def main():
     m_ew = compute_metrics(ew_res)
     m_rand = compute_metrics(rand_res)
 
+    # Ledger it BEFORE the robustness gauntlet below reads the ledger's trial count, so a
+    # fresh ledger's count for this family is exactly 1 (the canonical spec) on a first run.
+    ledger.log_experiment(LEDGER_FAMILY, "xsect_momentum_12_1",
+                          {"lookback": LOOKBACK, "skip": SKIP, "top_n": TOP_N},
+                          sorted(panel.columns), data_paths=stock_paths,
+                          result={"total_return": m["total_return"], "sharpe": m["sharpe"]})
+
     n_names = panel.shape[1]
     print(f"\nCROSS-SECTIONAL MOMENTUM (Thesis 001) -- 12-1, monthly, top {TOP_N} of "
           f"{n_names} stocks, long-only, equal weight")
@@ -473,10 +492,11 @@ def main():
     # ROBUSTNESS GAUNTLET -- the same skeptic's checks the single-name scan applies, so the
     # one surviving candidate is scrutinised BEFORE any human signs off on it (shared with the
     # track-record export via robustness()).
-    rob = robustness(res, spy_close_full, ew_res=ew_res)
+    rob = robustness(res, spy_close_full, ew_res=ew_res, family=LEDGER_FAMILY)
     regimes, flags = rob['regimes'], rob['flags']
     print("\nROBUSTNESS (same gauntlet as the scan):")
-    print(f"  Probabilistic Sharpe (monthly ACTIVE vs EW-universe, {rob['months']} months): "
+    print(f"  Probabilistic Sharpe (monthly ACTIVE vs EW-universe, {rob['months']} months, "
+          f"N={rob['n_trials_used']}): "
           f"{rob['psr']:.2f}  (P the edge over EW is > 0; >=0.95 = significant)")
     print(f"    [vs zero, for reference only: {rob['psr_raw']:.2f} -- owning any rising "
           f"basket scores ~1.00, which is why it is not the gate]")

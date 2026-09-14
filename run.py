@@ -17,6 +17,12 @@ from strategies import (buy_and_hold, random_strategy, sma_crossover,
 from walkforward import walk_forward
 from diagnostics import diagnose, config_sharpes
 from verdict_log import append_verdict
+import ledger
+
+# Same family as scan.py's wide loop (plan/14 I1.6): a single-ticker deep-dive here is one
+# more look at the same research question ("does this strategy beat this ticker's
+# benchmark?"), so its trial should count toward the SAME multiple-testing discount.
+LEDGER_FAMILY = "single-name-daily-scan"
 
 
 def load_kronos_forecast(path):
@@ -52,8 +58,19 @@ def log_wf_verdict(strategy, px, combined, chosen, grid, trial_sharpes, m, path)
     # the record also carries the ACTIVE t-stat and the benchmark-relative deflated Sharpe.
     bh_comb, _ = walk_forward(px, lambda p: (lambda prices: buy_and_hold(prices)),
                               [{}], CostModel(3, 1), n_folds=5)
+    # Real-CSV runs only: ledger this trial BEFORE diagnose() reads the ledger's count, so a
+    # fresh ledger's count on a first run is exactly this run's own trial (no drift from
+    # today's numbers). Synthetic runs (path is None) must never pollute the ledger.
+    ticker = os.path.splitext(os.path.basename(path))[0] if path else None
+    family = LEDGER_FAMILY if path is not None else None
+    if path is not None:
+        ledger.log_experiment(LEDGER_FAMILY, strategy, grid, ticker, data_paths=[path],
+                              result={'total_return': m['total_return'], 'sharpe': m['sharpe']})
     d = diagnose(combined, len(grid), benchmark=bench, trial_sharpes=trial_sharpes,
-                 bench_df=bh_comb)
+                 bench_df=bh_comb, family=family)
+    if path is not None and d.get('n_trials_active_used', 1) > 1:
+        print(f"  N used for the ledger-informed active deflated Sharpe: "
+              f"{d['n_trials_active_used']}")
     am = active_metrics(combined, bh_comb)
     append_verdict({
         'ticker': os.path.splitext(os.path.basename(path))[0] if path else 'synthetic',
