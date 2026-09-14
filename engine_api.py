@@ -111,7 +111,7 @@ def _fetch_alpaca(symbols):
     key, secret = _alpaca_keys()
     client = StockHistoricalDataClient(key, secret)
     start = (datetime.utcnow() - timedelta(days=365 * FETCH_YEARS)).strftime('%Y-%m-%d')
-    end = (datetime.utcnow() - timedelta(minutes=16)).strftime('%Y-%m-%d')
+    end = datetime.utcnow() - timedelta(minutes=16)
     req = StockBarsRequest(symbol_or_symbols=list(symbols), timeframe=TimeFrame.Day,
                            start=start, end=end, feed=DataFeed.SIP, adjustment=Adjustment.ALL)
     df = client.get_stock_bars(req).df

@@ -33,7 +33,7 @@ def main():
 
     client = StockHistoricalDataClient(key, secret)
     # Cap end at (now - 16 minutes) to avoid "subscription does not permit querying recent SIP data"
-    end = (datetime.utcnow() - timedelta(minutes=16)).strftime("%Y-%m-%d")
+    end = datetime.utcnow() - timedelta(minutes=16)
     req = StockBarsRequest(
         symbol_or_symbols=sym,
         timeframe=TimeFrame.Day,
