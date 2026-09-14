@@ -35,6 +35,9 @@ exports/
 # Live-fetched ticker cache (yfinance writes here) — vendor data, regenerate on demand.
 data_cache/
 
+# Alpaca SIP 1-minute bars (plan/14 I1.1) — vendor data, regenerate with fetch_intraday.py.
+intraday/
+
 # Per-machine Claude Code permission allowlist (keep launch.json, drop the local one).
 .claude/settings.local.json
 
