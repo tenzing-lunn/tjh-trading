@@ -1,4 +1,4 @@
-"""Cross-sectional momentum panel backtest -- Thesis 001 (Jonathan).
+"""Cross-sectional momentum panel backtest -- Thesis 001.
 
 The single-name engine (backtest.py) scores one ticker at a time; cross-sectional
 momentum needs the whole panel at once: each month, rank every stock by its 12-1
@@ -330,7 +330,7 @@ def panel_verdict(m, m_ew, m_rand, spy_m, flags, sig):
     else:
         status = (head + 'SURVIVES the panel bar; robustness-checked with no red flag and the edge '
                   f'over EW-universe is significant (t={sig["t"]:.2f}). '
-                  f'Awaiting Jonathan sign-off (economic story) + Henry judgment.')
+                  f'Awaiting Tenzing sign-off (economic story).')
     return {
         'survives': survives,
         'verdict': verdict,          # PASS / FAIL / INCONCLUSIVE

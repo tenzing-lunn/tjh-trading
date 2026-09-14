@@ -111,7 +111,7 @@ def thesis_001_summary():
     pv = panel_verdict(m, m_ew, m_rand, spy_m, rob['flags'], sig)
     status = (f'{pv["status"]} ({n_sig}/{len(sw)} sensitivity neighbors significant, t>=2; '
               f'{n_beat}/{len(sw)} beat EW on raw return) '
-              '— pending Jonathan sign-off + paper trading')
+              '— pending Tenzing sign-off + paper trading')
     return {
         'spec': f'12-1 cross-sectional momentum, monthly, top {TOP_N} of '
                 f'{panel.shape[1]} stocks, long-only, equal weight, n_trials=1',

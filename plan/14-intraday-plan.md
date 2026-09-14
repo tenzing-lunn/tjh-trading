@@ -44,7 +44,7 @@ than *t + 15*. If it can't survive that, we don't buy the feed.
 | 7-family signal fusion with learned weights | **Reject.** It's the multiple-testing trap with extra steps; against charter | — |
 | QUANTAXIS as backtest/account engine | **Reject for now.** Our engine is audited and 40 ms/backtest; re-auditing a Chinese-market-first framework buys nothing until live execution | Revisit at Phase 4 if our own OMS gets painful |
 | OpenBB as data layer | **Later.** Not needed for prices (Alpaca is better); reconsider when a thesis needs point-in-time fundamentals |
-| Kafka / Prometheus / Kubernetes / MLflow | **Skip.** Wrong scale. A cron job, a JSONL log and a web-app panel do the same job for three people |
+| Kafka / Prometheus / Kubernetes / MLflow | **Skip.** Wrong scale. A cron job, a JSONL log and a web-app panel do the same job for one person running agents |
 
 ---
 
@@ -52,7 +52,7 @@ than *t + 15*. If it can't survive that, we don't buy the feed.
 
 | # | Task | Done when | Model | Why this model | Depends on |
 |---|---|---|---|---|---|
-| I0.1 | **Three-way gate.** Add INCONCLUSIVE to the panel verdict: before a t-test, compute the test's power against a stated minimum edge (e.g. IR 0.5). FAIL only when a meaningful edge is *ruled out* (upper CI bound below the minimum); INCONCLUSIVE when power < 50%. Momentum's Gate G1 criterion 2 becomes INCONCLUSIVE, not FAIL | `xsect.py` prints power + the three-way verdict; `plan/12` Gate G1 and `plan/02-verdict-log` restated; a unit test shows a low-power series → INCONCLUSIVE, a zero-edge high-power series → FAIL | **Opus 5** | Statistics in the core verdict path | — |
+| I0.1 ✅ `2761a70` | **Three-way gate** (`power.py`, pre-registered, `IR_MIN = 0.5` annual IR of the active return). **PASS**: t ≥ 2 (plus the existing beats-EW/random/SPY and no-red-flag gates). **FAIL**: the edge is ruled out, i.e. the 95% CI upper bound `IR_hat + 1.96/√T` < `IR_MIN`. **INCONCLUSIVE**: everything else. Power P(t ≥ 2 \| IR = IR_MIN) and years-for-80%-power are always reported. Result: momentum is INCONCLUSIVE on the 30-name core (t 0.34, power 25%) and the point-in-time panel (t 1.17/1.26, power 54%) | `xsect.py` prints power + the three-way verdict; `plan/12` Gate G1 and `plan/02-verdict-log` restated; a unit test shows a low-power series → INCONCLUSIVE, a zero-edge high-power series → FAIL | **Opus 5** | Statistics in the core verdict path | — |
 | I0.2 | **Frequency-agnostic engine.** `ppy=252` is hard-coded in `metrics.py`, `walkforward.py`, `diagnostics.py`, `backtest.py`, `export_results.py`. Make it a property of the price series (inferred from median bar spacing, as `forecast_kronos.py` already does) and thread it through | All existing daily results reproduce exactly; a 1-minute synthetic series annualises with ppy ≈ 98,280 (390 × 252) | **Opus 5** | Touches every core file; must not change daily numbers | — ⇉ |
 | I0.3 | **Retire the 30-trades/fold rule as a hard flag.** `scan.py:53` marks slow strategies "suspect" for being slow. Replace with the I0.1 power check (trades/fold stays as a display column) | Rerun `scan.py`; the 0-EDGE headline holds; no row is suspect *only* because of trade count | **Sonnet 5** | Clear spec, existing code | I0.1 |
 

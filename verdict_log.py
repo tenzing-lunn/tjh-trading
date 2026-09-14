@@ -10,7 +10,7 @@ Render the machine log as a markdown table (newest first):
     python3 verdict_log.py --write-md plan/02-verdict-log.md
                                            # refresh the AUTO section of the verdict log
                                            # (everything above the marker is human-owned;
-                                           #  Henry's judgment stays a human column)
+                                           #  Tenzing's judgment stays a human column)
 """
 import json
 import os
@@ -87,7 +87,7 @@ def _vs_bh(r):
 
 def render_markdown(records):
     """Markdown table of real (non-synthetic) records, newest first. Judgment is
-    deliberately blank: that column belongs to Henry, never the machine."""
+    deliberately blank: that column belongs to Tenzing, never the machine."""
     rows = [r for r in records if not r.get("synthetic")]
     rows.sort(key=lambda r: r.get("timestamp", ""), reverse=True)
     # Keep only the newest verdict per (ticker, strategy, run, cost_regime) so re-running
@@ -100,7 +100,7 @@ def render_markdown(records):
         seen.add(key)
         deduped.append(r)
     rows = deduped
-    out = ["| Date | Strategy | Data | Cost regime | OOS net | OOS Sharpe | vs B&H | vs SPY | Flags | Judgment (Henry) |",
+    out = ["| Date | Strategy | Data | Cost regime | OOS net | OOS Sharpe | vs B&H | vs SPY | Flags | Judgment (Tenzing) |",
            "|------|----------|------|-------------|---------|-----------|--------|--------|-------|------------------|"]
     for r in rows:
         flags = r.get("red_flags") or []

@@ -323,7 +323,7 @@ def main():
               f"{top['dsr_scan']:.2f} after the {len(rows)}-row scan discount, "
               f"beating {top['rand_pct'] * 100:.0f}% of matched coin flips.")
         print("  It cleared Gates 1-3 (costs, OOS active-vs-benchmark, multiple-testing). Before")
-        print("  it is believed it STILL needs Gate 4: Jonathan's thesis for WHY the edge exists")
+        print("  it is believed it STILL needs Gate 4: a pre-registered thesis for WHY the edge exists")
         print("  and who is on the other side. A green number with no economic story is luck.")
     else:
         print(f"No clean survivor in {len(rows)} backtests across {len(tickers)} liquid names.")

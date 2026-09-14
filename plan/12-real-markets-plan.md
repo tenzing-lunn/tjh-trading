@@ -106,7 +106,11 @@ active t vs EW is **1.14-1.45 (2009-2026) / 1.72-1.78 (2019-2026 aligned)** -- s
 t>=2 bar in every construction; the opt/pess brackets do NOT bound the t-stat (both favor
 momentum -- see audit Finding D), so this is a three-way range, not two endpoints. **Provisional
 on 59% coverage with a tenure-biased exclusion of 2018+ index additions** (audit Finding E).
-Thesis 001 remains UNPROVEN even on the honest universe.
+Thesis 001 remains UNPROVEN even on the honest universe. **Restated 2026-09-14 under the
+three-way gate ([[plan/14-intraday-plan]] I0.1, `power.py`): Gate G1 criterion 2 is
+INCONCLUSIVE, not FAIL.** The test cannot rule out an edge worth trading (95% CI upper bound on
+annual IR 0.74-0.87 vs IR_MIN 0.5), and it had only 25-54% power to detect one; ~32 years of
+data would be needed for 80%. Momentum is neither proven nor rejected by this data.
 **P1.2 headline (2026-09-14):** the century-long test (`research/theses/001-long-history.md`,
 Ken French top-momentum-decile minus the total market, 1927-01 to 2026-07, 1195 months, outside
 any stock-picked universe) PASSES Gate G1 criterion 1 cleanly: t=5.44 gross / 5.35 after an

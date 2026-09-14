@@ -506,10 +506,9 @@ function AlpacaPanel({ state }: { state: Fetch<AlpacaStatus> }) {
           ) : (
             <p className="muted" style={{ margin: 0, fontSize: 12.5, lineHeight: 1.5 }}>
               <b>Alpaca is connected — zero open positions.</b> That is correct, not broken:
-              nothing has been promoted to paper trading yet. Thesis 001 survived the panel
-              bar (above) but is still awaiting Jonathan&apos;s economic-story sign-off and
-              Henry&apos;s judgment before the first simulated dollar moves (stage 7 of the
-              roadmap). The account starts at $100k paper cash.
+              nothing has been promoted to paper trading yet. Thesis 001 is INCONCLUSIVE on
+              the panel bar (above), and nothing moves to paper until a strategy PASSES
+              (stage 7 of the roadmap). The account starts at $100k paper cash.
             </p>
           )}
         </>

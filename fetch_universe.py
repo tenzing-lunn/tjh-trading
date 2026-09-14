@@ -15,7 +15,7 @@ club needs to prototype on, and it hid the signal in noise. This is a deliberate
 BORING, diversified core of 30 megacaps across 6 sectors -- no penny/pre-IPO junk (nio,
 sofi, plug, snap all cut), no leverage (tqqq cut), one clean benchmark (SPY; qqq/dia/iwm/vti
 cut). Quality over quantity: easier to reason about, faster to iterate, same engine.
-Broaden again later only if Henry ratifies a bigger list for a specific reason.
+Broaden again later only if Tenzing approves a bigger list for a specific reason.
 """
 import os
 import sys
