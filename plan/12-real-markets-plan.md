@@ -89,8 +89,17 @@ fix list, in its stated order (each step after P0.5 depends on P0.4 landing firs
 (6265fa5, f8a320b, 69fa292, 3562acd, ccab48d, 44f8d03, a9f5215, 4b45952, 900d7f6). P1.7-pre's
 adversarial re-audit (`research/audits/2026-09-14-p0-review.md`) confirmed the standing verdict
 (UNPROVEN, t=0.34) reproduces from three independent entry points and found no false positive;
-it left a short $0 fix list (its §7) of display/labelling issues that don't change any verdict.
-Phase 1: P1.1, P1.3, P1.5, P1.6 done; P1.2 not yet started; P1.4 in flight.
+it left a short $0 fix list (its §7 items 1/2/3/5 landed in `3e06dfe`) of display/labelling
+issues that don't change any verdict.
+Phase 1: P1.1, P1.3, P1.4, P1.5, P1.6 done (`9d83945`); P1.2 not yet started; P1.7 (Fable
+red-teams all of Phase 1) not yet started, depends on P1.2.
+**P1.4 headline (2026-09-14):** on the honest point-in-time S&P 500 universe (2009-2026, 500 of
+834 dead/live symbols priced so far, rest queued for future monthly Tiingo fetches), the 30-name
+2026 universe's EW baseline is inflated **+103 to +105 pp of total return** (2019-2026) versus
+the real one -- that gap *is* the measured survivorship + winner-selection bias. Momentum's
+active t vs EW rises from 0.34 (30-name) to 1.17-1.26 (full point-in-time universe) but stays
+below the t>=2 bar; verdict does not flip between optimistic/pessimistic missing-data brackets.
+Thesis 001 remains UNPROVEN even on the honest universe.
 
 ## Phase 1 — Proof: does momentum really work, beyond one lucky stretch?
 
