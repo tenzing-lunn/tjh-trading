@@ -91,8 +91,8 @@ adversarial re-audit (`research/audits/2026-09-14-p0-review.md`) confirmed the s
 (UNPROVEN, t=0.34) reproduces from three independent entry points and found no false positive;
 it left a short $0 fix list (its §7 items 1/2/3/5 landed in `3e06dfe`) of display/labelling
 issues that don't change any verdict.
-Phase 1: P1.1, P1.3, P1.4, P1.5, P1.6 done (`9d83945`); P1.2 not yet started; P1.7 (Fable
-red-teams all of Phase 1) not yet started, depends on P1.2.
+Phase 1: P1.1-P1.6 all done (`9d83945`, `65f4d2b`); P1.7 (Fable red-teams all of Phase 1) not
+yet started -- ready to launch, all its deps are met.
 **P1.4 headline (2026-09-14):** on the honest point-in-time S&P 500 universe (2009-2026, 500 of
 834 dead/live symbols priced so far, rest queued for future monthly Tiingo fetches), the 30-name
 2026 universe's EW baseline is inflated **+103 to +105 pp of total return** (2019-2026) versus
@@ -100,6 +100,15 @@ the real one -- that gap *is* the measured survivorship + winner-selection bias.
 active t vs EW rises from 0.34 (30-name) to 1.17-1.26 (full point-in-time universe) but stays
 below the t>=2 bar; verdict does not flip between optimistic/pessimistic missing-data brackets.
 Thesis 001 remains UNPROVEN even on the honest universe.
+**P1.2 headline (2026-09-14):** the century-long test (`research/theses/001-long-history.md`,
+Ken French top-momentum-decile minus the total market, 1927-01 to 2026-07, 1195 months, outside
+any stock-picked universe) PASSES Gate G1 criterion 1 cleanly: t=5.44 gross / 5.35 after an
+estimated cost drag, no decade >19.2% of the total gain. Numbers independently re-derived from
+raw CSVs and confirmed exact. Important caveat carried into the verdict: this measures the
+academic phenomenon on a value-weighted, hundreds-of-names portfolio, not our concentrated
+10-stock spec (criterion 2/P1.4 is still the one that fails); the premium has also roughly
+halved since publication (post-2000 t=1.20) and the after-cost estimate vanishes entirely at
+historically realistic turnover/costs (t=0.59 at 1200%/yr x 50bps).
 
 ## Phase 1 — Proof: does momentum really work, beyond one lucky stretch?
 
