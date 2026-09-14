@@ -40,13 +40,14 @@ import pandas as pd
 
 from data import load_csv
 from costs import CostModel
-from metrics import compute_metrics, active_metrics
+from metrics import compute_metrics, active_metrics, infer_ppy
 from strategies import buy_and_hold, sma_crossover, mean_reversion, time_series_momentum
 from walkforward import walk_forward
 from diagnostics import (diagnose, config_sharpes, active_returns, active_deflated_sharpe,
                          deflated_sharpe_ratio)
 from verdict_log import append_verdict, scan_row_to_record
 import ledger
+import power as power_mod
 
 # The experiment-ledger research question this scan belongs to (plan/14 I1.6): every
 # (ticker, strategy) look here, and every real-CSV single-ticker look via run.py, share
@@ -177,6 +178,11 @@ def scan_universe(paths, benchmark=None, cost_model=ETF_COST, n_folds=N_FOLDS, l
                             trial_sharpes=config_sharpes(px, fn, grid, cost_model),
                             n_folds=n_folds, bench_df=bh_comb)
             am = active_metrics(combined, bh_comb)
+            # Statistical power (plan/14 I0.1/I0.3): could this OOS window have detected an
+            # edge worth trading at all? Trade count alone conflates "slow" with "noise" --
+            # this asks the honest question on the active-return series itself.
+            pw = power_mod.from_active(active_returns(combined, bh_comb),
+                                       ppy=infer_ppy(combined.index))
             # Gate 2 -- significance of the edge OVER each benchmark. n_trials=1 because the
             # walk-forward OOS series carries no in-sample selection on the grid axis (params
             # were picked on train only); the honest best-of-N charge is levied once, at scan
@@ -200,6 +206,7 @@ def scan_universe(paths, benchmark=None, cost_model=ETF_COST, n_folds=N_FOLDS, l
                 'raw_dsr_vs_zero': diag['deflated_sharpe'],
                 'red_flags': diag['red_flags'],
                 'trades_per_fold': tpf, 'thin': tpf < MIN_TRADES_PER_FOLD,
+                'power_verdict': pw['verdict'], 'power': pw['power'], 'ir_ci_hi': pw['ir_ci_hi'],
             })
             actives.append(active_returns(combined, bh_comb).values)
             # Ledger it BEFORE the discount below is computed, so a fresh ledger's count
@@ -228,7 +235,7 @@ def scan_universe(paths, benchmark=None, cost_model=ETF_COST, n_folds=N_FOLDS, l
         # second look" = significant on at least one benchmark leg, i.e. _verdict's 'suspect'.
         r['survives_gate2'] = _ge(r['dsr_vs_bh'], DSR_BAR) or _ge(r['dsr_vs_spy'], DSR_BAR)
         r['clean'] = (r['significant'] and r['metrics']['total_return'] > 0
-                      and r['trades_per_fold'] >= MIN_TRADES_PER_FOLD
+                      and r['power_verdict'] != 'FAIL'
                       and r['rand_pct'] >= RAND_BAR)
     return rows
 
@@ -243,8 +250,21 @@ def _verdict(r):
     # 'EDGE?' = the edge over BOTH benchmarks survived the discount, and it is positive,
     # non-thin and better than 95% of holding-period-matched coin flips.
     # 'suspect' = significant against one benchmark leg only -- a prompt to look, not a pass.
+    # 'dead' is the legacy name for "neither of the above" -- kept for callers that still
+    # read this 3-way value (engine_api.py, export_track_record.py). For display, see
+    # `_verdict_display`, which splits it into FAIL / INCONCLUSIVE (plan/14 I0.3).
     return ('EDGE?' if r['clean'] else
             'suspect' if r['survives_gate2'] else 'dead')
+
+
+def _verdict_display(r):
+    """Same as `_verdict`, but the 'dead' bucket is split by the power check (I0.1) into
+    FAIL (an edge worth trading is ruled out) and INCONCLUSIVE (the test couldn't tell --
+    not enough data/power, not "no edge"). Used only for this file's own printed output."""
+    v = _verdict(r)
+    if v != 'dead':
+        return v
+    return 'FAIL' if r['power_verdict'] == 'FAIL' else 'INCONCLUSIVE'
 
 
 HDR = ("  ticker strat     N   OOS ret   Sharpe   maxDD   trds  t/fold    vsSPY "
@@ -262,7 +282,7 @@ def _line(r):
     return (f"  {r['ticker']:6s} {r['strategy']:7s} {m['n_trials']:3d} "
             f"{_pct(m['total_return'])}  {m['sharpe']:6.2f}  {_pct(m['max_drawdown'], 6)} "
             f"{m['num_trades']:5d} {r['trades_per_fold']:6.1f} {vs} {_dsr(r['dsr'])}  "
-            f"{r['rand_pct'] * 100:4.0f}%  {_verdict(r)}{flag}")
+            f"{r['rand_pct'] * 100:4.0f}%  {_verdict_display(r)}{flag}")
 
 
 def main():
@@ -297,8 +317,13 @@ def main():
 
     edges = [r for r in rows if r['clean']]
     suspects = [r for r in rows if r['survives_gate2'] and not r['clean']]
+    dead = [r for r in rows if not r['survives_gate2']]
+    # Split "dead" into FAIL (the power check rules out an edge worth trading) and
+    # INCONCLUSIVE (the test couldn't tell -- not enough data/power, not "no edge").
+    fails = [r for r in dead if r['power_verdict'] == 'FAIL']
+    inconclusive = [r for r in dead if r['power_verdict'] != 'FAIL']
     print(f"RESULT: {len(edges)} EDGE?  |  {len(suspects)} suspect  |  "
-          f"{len(rows) - len(edges) - len(suspects)} dead   (of {len(rows)})\n")
+          f"{len(fails)} FAIL  |  {len(inconclusive)} INCONCLUSIVE   (of {len(rows)})\n")
 
     # N actually charged for the scan-wide multiple-testing discount (plan/14 I1.6): the
     # ledger's count for this family, which can only be >= this run's own row count.
@@ -318,7 +343,7 @@ def main():
 
     if edges:
         print("EDGE? candidates (active DSR >=0.95 vs B&H, vs SPY and after the scan-wide "
-              "discount; positive; >=30 trades/fold; beats >=95% of matched coin flips):")
+              "discount; positive; power check not FAIL; beats >=95% of matched coin flips):")
         print(HDR); print("  " + "-" * 95)
         for r in edges:
             print(_line(r))
@@ -357,7 +382,10 @@ def main():
         print(f"for the N={max(n_used, len(rows))} configs ever tried in this family is charged.")
         print("That is the honest base rate: on liquid daily bars, simple timing rules do not")
         print("beat just holding the index. The scan did its job by refusing a fake winner.")
-    print("* thin = fewer than 30 trades/fold; treat its Sharpe as noise.")
+    print("* thin = fewer than 30 trades/fold; a display flag only (plan/14 I0.3) -- it no "
+          "longer demotes a verdict on its own. FAIL/INCONCLUSIVE come from the power check "
+          "(power.py) on the active return: FAIL rules out an edge worth trading, "
+          "INCONCLUSIVE means the test couldn't tell.")
     print(f"minDSR = the binding leg of (vs B&H, vs SPY, scan-wide); rand% = percentile vs "
           f"{N_RANDOM} holding-period-matched coin flips.\n")
 

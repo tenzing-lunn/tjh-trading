@@ -18,7 +18,7 @@
     "oos_return": 31.651718016270372,
     "sharpe": 1.374405411701599,
     "trades_per_fold": 1.2,
-    "dsr": 0.0017551223338535538,
+    "dsr": 0.0017353109661529809,
     "verdict": "suspect",
     "red_flags": [
      "Only 1 trades/fold -- Sharpe may be luck, not skill.",
@@ -31,7 +31,7 @@
     "oos_return": 28.85416238402599,
     "sharpe": 1.3555756332773048,
     "trades_per_fold": 9.0,
-    "dsr": 0.0010960814093865512,
+    "dsr": 0.001083188372686672,
     "verdict": "suspect",
     "red_flags": [
      "Only 9 trades/fold -- Sharpe may be luck, not skill.",
@@ -44,7 +44,7 @@
     "oos_return": 6.188083344435071,
     "sharpe": 1.1055063597953836,
     "trades_per_fold": 6.2,
-    "dsr": 4.464235289847185e-05,
+    "dsr": 4.398647325498661e-05,
     "verdict": "dead",
     "red_flags": [
      "Only 6 trades/fold -- Sharpe may be luck, not skill.",
@@ -58,7 +58,7 @@
     "oos_return": 6.0926742999802554,
     "sharpe": 0.9205854951102098,
     "trades_per_fold": 8.0,
-    "dsr": 3.820881329663628e-06,
+    "dsr": 3.7576115358706197e-06,
     "verdict": "suspect",
     "red_flags": [
      "Only 8 trades/fold -- Sharpe may be luck, not skill.",
@@ -72,7 +72,7 @@
     "oos_return": 4.296095851884211,
     "sharpe": 0.8734753226500857,
     "trades_per_fold": 2.8,
-    "dsr": 1.3002510245607724e-05,
+    "dsr": 1.2803263033656087e-05,
     "verdict": "dead",
     "red_flags": [
      "Only 3 trades/fold -- Sharpe may be luck, not skill.",
@@ -86,7 +86,7 @@
     "oos_return": 4.273363253402888,
     "sharpe": 1.0037749248066545,
     "trades_per_fold": 3.8,
-    "dsr": 5.264658283599122e-06,
+    "dsr": 5.1773857193682105e-06,
     "verdict": "dead",
     "red_flags": [
      "Only 4 trades/fold -- Sharpe may be luck, not skill.",
@@ -100,7 +100,7 @@
     "oos_return": 3.3653309560874822,
     "sharpe": 0.8804741484579315,
     "trades_per_fold": 12.0,
-    "dsr": 0.010574814509628272,
+    "dsr": 0.010476908273128638,
     "verdict": "dead",
     "red_flags": [
      "Only 12 trades/fold -- Sharpe may be luck, not skill.",
@@ -115,7 +115,7 @@
     "oos_return": 2.742139503434489,
     "sharpe": 0.8423727661971153,
     "trades_per_fold": 7.6,
-    "dsr": 1.3077386326942886e-05,
+    "dsr": 1.2875302475123807e-05,
     "verdict": "dead",
     "red_flags": [
      "Only 8 trades/fold -- Sharpe may be luck, not skill.",
@@ -336,7 +336,7 @@
   ],
   "sweep_beats_ew": "7/9",
   "sweep_significant": "0/9",
-  "status": "INCONCLUSIVE -- (IR_hat=0.13, 95% CI upper 0.87 vs IR_MIN 0.50; power 25% over 7.0y, ~32y needed for 80%). clears the raw return bars, but the edge over EW-universe is not statistically distinguishable from luck (t=0.34, need ~2+); also 4 robustness flag(s) above. (0/9 sensitivity neighbors significant, t>=2; 7/9 beat EW on raw return) \u2014 pending Jonathan sign-off + paper trading",
+  "status": "INCONCLUSIVE -- (IR_hat=0.13, 95% CI upper 0.87 vs IR_MIN 0.50; power 25% over 7.0y, ~32y needed for 80%). clears the raw return bars, but the edge over EW-universe is not statistically distinguishable from luck (t=0.34, need ~2+); also 4 robustness flag(s) above. (0/9 sensitivity neighbors significant, t>=2; 7/9 beat EW on raw return) \u2014 pending Tenzing sign-off + paper trading",
   "verdict": "INCONCLUSIVE",
   "power": {
    "verdict": "INCONCLUSIVE",
