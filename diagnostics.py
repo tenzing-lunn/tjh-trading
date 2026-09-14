@@ -116,6 +116,43 @@ def config_sharpes(px, fn, grid, cost_model, ppy=252):
     return out
 
 
+# ---- benchmark-relative (ACTIVE) deflated Sharpe -----------------------------------------
+# `deflated_sharpe_ratio` above asks "did this make money (after paying for N trials)?" -- a
+# question pure beta answers YES to (holding SPY scores 0.99). The active versions below ask
+# the only question a gate should: "did this beat its BENCHMARK?" Same formula, different input.
+def active_returns(strat_df, bench_df):
+    """Per-bar ACTIVE return on the shared index: strategy net minus benchmark net.
+    Both frames come from run_backtest under the SAME cost model. Rows where either side
+    is missing are dropped (never filled)."""
+    a = strat_df['net'] - bench_df['net'].reindex(strat_df.index)
+    return a.dropna()
+
+
+def config_active_sharpes(px, fn, grid, cost_model, bench_pos, ppy=252):
+    """Annualized ACTIVE Sharpe of every config in the grid -- (config net - benchmark net).
+    The trial distribution `active_deflated_sharpe` needs; the active analogue of
+    `config_sharpes`. `bench_pos` is the benchmark's position Series (e.g. buy_and_hold(px))."""
+    bench, _ = run_backtest(px, bench_pos, cost_model, ppy)
+    out = []
+    for params in grid:
+        o, _ = run_backtest(px, fn(px, **params), cost_model, ppy)
+        a = active_returns(o, bench)
+        sd = a.std(ddof=1) if len(a) > 1 else 0.0
+        out.append(float(a.mean() / sd * math.sqrt(ppy)) if sd > 0 else float('nan'))
+    return out
+
+
+def active_deflated_sharpe(strat_df, bench_df, n_trials, trial_active_sharpes=None, ppy=252):
+    """P(the strategy's edge OVER the benchmark is real, not the luckiest of `n_trials`).
+    This is the number a gate may consume; `deflated_sharpe_ratio` (vs zero) is display only.
+
+    `trial_active_sharpes` must be ACTIVE Sharpes (see `config_active_sharpes`) or the null
+    threshold is in the wrong units. NaN when the active series has no variance -- a strategy
+    identical to its benchmark has no edge to test (B&H vs B&H is NaN, not 0.5)."""
+    return deflated_sharpe_ratio(active_returns(strat_df, bench_df).values,
+                                 n_trials, trial_active_sharpes, ppy)
+
+
 # ---- consistency: per-year, regime ------------------------------------------------------
 def per_year_returns(net_series, ppy=252):
     """List of {period, return, sharpe, bars} per calendar year of the OOS net series."""
@@ -177,16 +214,22 @@ def red_flags(metrics, diag):
     return out
 
 
-def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=252):
+def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=252,
+             bench_df=None, trial_active_sharpes=None):
     """Full diagnostics dict for one walk-forward OOS result (`oos` = walk_forward's combined
     DataFrame with a 'net' column). Assembles per-year, deflated Sharpe, regime split, and
-    the red-flag list. This is what the web app's panel (5) and the verdict log consume."""
+    the red-flag list. This is what the web app's panel (5) and the verdict log consume.
+
+    `bench_df` (optional): the benchmark's backtest output on the same index, under the same
+    cost model (e.g. the ticker's own buy-and-hold walk-forward). When given, the dict also
+    carries `deflated_sharpe_active` -- the benchmark-relative number a gate should consume."""
     m = compute_metrics(oos, ppy)
     net = oos['net'].dropna()
     per_year = per_year_returns(net, ppy)
     best_year, share = _best_year_share(per_year)
     diag = {
         'n_trials': n_trials,
+        # vs ZERO, beta included -- "did it make money", NOT "did it beat its benchmark".
         'deflated_sharpe': deflated_sharpe_ratio(net.values, n_trials, trial_sharpes, ppy),
         'trades_per_fold': m['num_trades'] / n_folds,
         'per_year': per_year,
@@ -194,6 +237,9 @@ def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=2
         'best_year_share': share,
         'regime_split': regime_split(net, benchmark) if benchmark is not None else None,
     }
+    if bench_df is not None:
+        diag['deflated_sharpe_active'] = active_deflated_sharpe(
+            oos, bench_df, n_trials, trial_active_sharpes, ppy)
     diag['red_flags'] = red_flags(m, diag)
     return diag
 

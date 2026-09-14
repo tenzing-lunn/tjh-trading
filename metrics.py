@@ -27,3 +27,37 @@ def compute_metrics(df, ppy=252):
     return {'total_return':total_return,'cagr':cagr,'sharpe':sharpe,'ann_vol':vol,
             'max_drawdown':max_dd,'num_trades':trades,'avg_turnover':turn.mean(),
             'win_rate':win_rate,'ev_per_trade_frac':ev,'bars':n}
+
+
+def active_metrics(df, bench_df, ppy=252):
+    """Benchmark-relative metrics: how much of this is skill and how much is just the
+    benchmark? `bench_df` is the benchmark's backtest output under the SAME cost model;
+    the two are aligned on their shared index and bars missing on either side are dropped.
+
+    Every series used here is 'net' (cost-adjusted) -- beta and alpha included -- so that
+    alpha_ann + beta*benchmark reconstructs exactly the return the strategy actually earned,
+    costs and all. A beta near 1 with alpha_ann near 0 means "this is the benchmark".
+
+    Returns {'active_return' (compounded), 'tracking_error' (annualized), 'information_ratio',
+    't_stat' (of the mean active return), 'beta', 'alpha_ann', 'pct_bars_won', 'bars'}."""
+    a = (df['net'] - bench_df['net'].reindex(df.index)).dropna()
+    n = len(a)
+    keys = ['active_return','tracking_error','information_ratio','t_stat',
+            'beta','alpha_ann','pct_bars_won']
+    if n < 2:
+        return dict({k: np.nan for k in keys}, bars=n)
+    rs = df['net'].reindex(a.index).values
+    rb = bench_df['net'].reindex(a.index).values
+    av = a.values
+    sd = av.std(ddof=1)
+    te = sd * np.sqrt(ppy)
+    var_b = rb.var(ddof=1)
+    beta = np.cov(rs, rb, ddof=1)[0, 1] / var_b if var_b > 0 else np.nan
+    return {'active_return': float(np.prod(1 + av) - 1),
+            'tracking_error': float(te),
+            'information_ratio': float(av.mean() * ppy / te) if te > 0 else np.nan,
+            't_stat': float(av.mean() / (sd / np.sqrt(n))) if sd > 0 else np.nan,
+            'beta': float(beta),
+            'alpha_ann': float((rs.mean() - beta * rb.mean()) * ppy),
+            'pct_bars_won': float((av > 0).mean()),
+            'bars': n}
