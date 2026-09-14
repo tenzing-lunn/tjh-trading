@@ -114,7 +114,10 @@ def _random_percentile(px, active_ret, num_trades, bh_comb, cost_model, n_folds,
     The percentile is over ACTIVE return vs the ticker's own buy&hold -- so it answers
     "how many equally-lazy random schedules would have beaten the stock by more?".
     A real bar: rand_pct 0.95 means the candidate beat 95% of them."""
-    k = len(bh_comb) / num_trades if num_trades else len(bh_comb)
+    # /2 because a coin redrawn every k bars only CHANGES state (= pays a trade) on half its
+    # redraws; without it the null turns over half as often as the candidate and the bar is
+    # mislabelled "holding-period-matched".
+    k = len(bh_comb) / (2 * num_trades) if num_trades else len(bh_comb)
     beaten, totals = 0, []
     ok = active_ret == active_ret
     for seed in range(n_random):

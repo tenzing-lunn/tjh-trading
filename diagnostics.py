@@ -235,10 +235,19 @@ def red_flags(metrics, diag):
     tpf = diag.get('trades_per_fold')
     if tpf is not None and tpf < 30:
         out.append(f"Only {tpf:.0f} trades/fold -- Sharpe may be luck, not skill.")
-    dsr, n = diag.get('deflated_sharpe'), diag.get('n_trials')
-    if dsr is not None and dsr == dsr and dsr < 0.95:
-        out.append(f"Best of {n} configs -- deflated Sharpe {dsr:.2f} (<0.95 => not "
-                   f"distinguishable from luck).")
+    # When a benchmark was supplied upstream the gate consumes the ACTIVE deflated Sharpe,
+    # so the prose must quote THAT number -- the raw vs-zero one is display only (pure beta
+    # scores 0.99 on it) and would name a statistic no verdict depends on.
+    if 'deflated_sharpe_active' in diag:
+        dsa = diag['deflated_sharpe_active']
+        if dsa is not None and dsa == dsa and dsa < 0.95:
+            out.append(f"Edge over the benchmark: active deflated Sharpe {dsa:.2f} "
+                       f"(<0.95 => not distinguishable from luck).")
+    else:
+        dsr, n = diag.get('deflated_sharpe'), diag.get('n_trials')
+        if dsr is not None and dsr == dsr and dsr < 0.95:
+            out.append(f"Best of {n} configs -- deflated Sharpe {dsr:.2f} (<0.95 => not "
+                       f"distinguishable from luck).")
     # One-year wonder. When a benchmark was supplied upstream the per-year rows carry
     # 'active', and the question becomes "was the EDGE one year?" -- the raw version can
     # only see beta, which is spread evenly across years and never trips.
@@ -301,8 +310,13 @@ def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=2
                          if benchmark is not None else None),
     }
     if bench_df is not None:
+        # N = 1, NOT `n_trials`: the walk-forward OOS series carries no grid-selection bias
+        # on this axis (params were picked on TRAIN only), so the active edge owes no
+        # best-of-N discount here -- scan.py's own gate charges 1 for the same reason. At
+        # n=1 the trial-Sharpe dispersion is irrelevant (_expected_max_z(1) == 0), so
+        # `trial_active_sharpes` is deliberately not passed through.
         diag['deflated_sharpe_active'] = active_deflated_sharpe(
-            oos, bench_df, n_trials, trial_active_sharpes, ppy)
+            oos, bench_df, 1, None, ppy)
     diag['red_flags'] = red_flags(m, diag)
     return diag
 

@@ -36,6 +36,7 @@ marker; everything above stays human-owned. Henry fills only the **Judgment** co
 
 | Date | Strategy | Data | Cost regime | OOS net | OOS Sharpe | vs B&H | vs SPY | Flags | Judgment (Henry) |
 |------|----------|------|-------------|---------|-----------|--------|--------|-------|------------------|
+| 2026-09-14 | meanrev_wf | aapl | 3/1 bps (liquid ETF) | -0.9% | 0.08 | -417.6% (t=-2.2) | +170.7% | 2 flag(s) | |
 | 2026-07-11 | xsect_momentum_12_1 | panel_30 | 3/1 bps (liquid ETF) | +309.4% | 0.99 | BEAT | +179.7% | 1 flag(s) | |
 | 2026-07-11 | tsmom | meta | 3/1 bps (liquid ETF) | +336.5% | 0.88 | BEAT | +170.7% | 1 flag(s) | |
 | 2026-07-11 | sma | meta | 3/1 bps (liquid ETF) | +232.6% | 0.76 | BEAT | +170.7% | 3 flag(s) | |
