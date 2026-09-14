@@ -35,6 +35,7 @@ from data import load_csv
 from metrics import compute_metrics
 from diagnostics import deflated_sharpe_ratio, regime_split
 from verdict_log import append_verdict
+import power
 
 ETF_COST = CostModel(spread_bps=3, slippage_bps=1)
 # The benchmark and pure index/leveraged products are not cross-sectional candidates.
@@ -303,21 +304,37 @@ def panel_verdict(m, m_ew, m_rand, spy_m, flags, sig):
     beats_rand = bool(m['total_return'] > m_rand['total_return'])
     beats_spy = bool(spy_m is None or m['total_return'] > spy_m['total_return'])
     flags = flags or []
+    # Three-way gate (plan/14 I0.1, power.py): the statistics decide FAIL (edge ruled out) vs
+    # INCONCLUSIVE (can't tell); PASS additionally needs every pre-existing gate below.
+    pw = power.from_t(sig['t'], sig['n_months'], ppy=12)
+    survives = bool(beats_ew and beats_rand and beats_spy and pw['verdict'] == 'PASS' and not flags)
+    verdict = 'PASS' if survives else ('FAIL' if pw['verdict'] == 'FAIL' else 'INCONCLUSIVE')
+    why = (f"IR_hat={pw['ir_hat']:.2f}, 95% CI upper {pw['ir_ci_hi']:.2f} vs IR_MIN "
+           f"{pw['ir_min']:.2f}; power {pw['power']*100:.0f}% over {pw['years']:.1f}y, "
+           f"~{pw['years_for_80pct_power']:.0f}y needed for 80%")
+    if verdict == 'FAIL':
+        head = f'FAIL -- an edge of IR >= {pw["ir_min"]:.1f} over EW-universe is ruled out ({why}). '
+    elif verdict == 'INCONCLUSIVE':
+        head = f'INCONCLUSIVE -- ({why}). '
+    else:
+        head = 'PASS -- '
     if not (beats_ew and beats_rand and beats_spy):
-        status = 'DOES NOT clear the bar -- selection added nothing beyond the universe'
+        status = head + 'DOES NOT clear the raw bars -- selection added nothing beyond the universe'
     elif sig['t'] < 2:
-        status = ('UNPROVEN -- clears the raw return bars, but the edge over EW-universe is '
+        status = (head + 'clears the raw return bars, but the edge over EW-universe is '
                   f'not statistically distinguishable from luck (t={sig["t"]:.2f}, need ~2+)'
                   + (f'; also {len(flags)} robustness flag(s) above.' if flags else '.'))
     elif flags:
-        status = (f'clears the raw bars and the edge over EW-universe is significant '
+        status = (head + f'clears the raw bars and the edge over EW-universe is significant '
                   f'(t={sig["t"]:.2f}), but {len(flags)} robustness flag(s) above temper it.')
     else:
-        status = ('SURVIVES the panel bar; robustness-checked with no red flag and the edge '
+        status = (head + 'SURVIVES the panel bar; robustness-checked with no red flag and the edge '
                   f'over EW-universe is significant (t={sig["t"]:.2f}). '
                   f'Awaiting Jonathan sign-off (economic story) + Henry judgment.')
     return {
-        'survives': bool(beats_ew and beats_rand and beats_spy and sig['t'] >= 2 and not flags),
+        'survives': survives,
+        'verdict': verdict,          # PASS / FAIL / INCONCLUSIVE
+        'power': pw,                 # ir_hat, years, ir_ci_hi, power, years_for_80pct_power
         'status': status,
         'beats_ew': beats_ew, 'beats_random': beats_rand, 'beats_spy': beats_spy,
         't_active': float(sig['t']), 'ci': [float(sig['ci_lo']), float(sig['ci_hi'])],
@@ -516,6 +533,14 @@ def main():
           f"(selection skill vs just owning these names)")
     print(f"  beats random picks: {'YES' if beats_rand else 'NO'}")
     print(f"  beats holding SPY:  {'YES' if beats_spy else 'NO'}")
+    pw = pv['power']
+    print(f"\nPOWER / THREE-WAY GATE (active vs EW-universe, IR_MIN = {pw['ir_min']:.2f}):")
+    print(f"  annualized IR_hat {pw['ir_hat']:.2f} over {pw['years']:.1f} years   observed t {pw['t']:.2f}")
+    print(f"  95% CI upper bound on IR: {pw['ir_ci_hi']:.2f}  "
+          f"({'< IR_MIN: edge ruled out' if pw['ir_ci_hi'] < pw['ir_min'] else '>= IR_MIN: edge NOT ruled out'})")
+    print(f"  power P(t >= 2 | true IR = {pw['ir_min']:.2f}): {pw['power']*100:.0f}%   "
+          f"years needed for 80% power: {pw['years_for_80pct_power']:.1f}")
+    print(f"  three-way verdict: {pv['verdict']}")
 
     print("\nCAVEATS (read before believing anything above):")
     print(f"  * SURVIVORSHIP: the universe is today's {n_names} liquid names -- every one")

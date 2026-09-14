@@ -146,6 +146,30 @@ def main():
     check("panel significance gate does not manufacture momentum on pure noise",
           n_below_2 >= 95, f"{n_below_2}/100 seeds had t < 2 (want >= 95)")
 
+    # 10. THREE-WAY GATE (plan/14 I0.1). Synthetic monthly ACTIVE series with a known true IR,
+    #     200 seeds each. Expected rates under the pre-registered rule: IR 0 / 60y -> FAIL ~97%;
+    #     IR 0 / 3y -> INCONCLUSIVE ~84% (the rest are FAIL on a very negative draw or a 2.5%
+    #     false PASS); IR 1.5 / 20y -> PASS ~100%. "Can't tell" must not be reported as "no edge".
+    from power import from_active
+    rng = np.random.default_rng(7)
+
+    def rate(true_ir, years, want):
+        sd = 0.04
+        mu = true_ir / np.sqrt(12) * sd
+        hits = sum(from_active(rng.normal(mu, sd, int(years * 12)))["verdict"] == want
+                   for _ in range(200))
+        return hits / 200
+
+    r_a = rate(0.0, 60, "FAIL")
+    check("three-way gate: true IR 0 over 60 years -> FAIL", r_a >= 0.90,
+          f"{r_a*100:.0f}% FAIL (want >= 90%)")
+    r_b = rate(0.0, 3, "INCONCLUSIVE")
+    check("three-way gate: true IR 0 over 3 years -> INCONCLUSIVE", r_b >= 0.75,
+          f"{r_b*100:.0f}% INCONCLUSIVE (want >= 75%)")
+    r_c = rate(1.5, 20, "PASS")
+    check("three-way gate: true IR 1.5 over 20 years -> PASS", r_c >= 0.99,
+          f"{r_c*100:.0f}% PASS (want >= 99%)")
+
     n_fail = sum(1 for ok, _, _ in results if not ok)
     print(f"\n{'='*48}\n{len(results)-n_fail}/{len(results)} checks passed.")
     if n_fail:

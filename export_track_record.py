@@ -131,6 +131,8 @@ def thesis_001_summary():
         'sweep_beats_ew': f'{n_beat}/{len(sw)}',
         'sweep_significant': f'{n_sig}/{len(sw)}',
         'status': status,
+        'verdict': pv['verdict'],      # PASS / FAIL / INCONCLUSIVE (power.py three-way gate)
+        'power': pv['power'],
         'caveats': ['universe is survivorship-biased (today\'s liquid names)',
                     'single history, no parameter search (nothing to overfit, '
                     'but only one draw)',

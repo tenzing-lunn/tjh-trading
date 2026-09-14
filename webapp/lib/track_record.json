@@ -21,7 +21,8 @@
     "dsr": 0.0017551223338535538,
     "verdict": "suspect",
     "red_flags": [
-     "Only 1 trades/fold -- Sharpe may be luck, not skill."
+     "Only 1 trades/fold -- Sharpe may be luck, not skill.",
+     "Edge over the benchmark: active deflated Sharpe 0.28 (<0.95 => not distinguishable from luck)."
     ]
    },
    {
@@ -33,7 +34,8 @@
     "dsr": 0.0010960814093865512,
     "verdict": "suspect",
     "red_flags": [
-     "Only 9 trades/fold -- Sharpe may be luck, not skill."
+     "Only 9 trades/fold -- Sharpe may be luck, not skill.",
+     "Edge over the benchmark: active deflated Sharpe 0.23 (<0.95 => not distinguishable from luck)."
     ]
    },
    {
@@ -46,6 +48,7 @@
     "verdict": "dead",
     "red_flags": [
      "Only 6 trades/fold -- Sharpe may be luck, not skill.",
+     "Edge over the benchmark: active deflated Sharpe 0.06 (<0.95 => not distinguishable from luck).",
      "Loses to the benchmark in up, chop; edge is one-regime."
     ]
    },
@@ -59,6 +62,7 @@
     "verdict": "suspect",
     "red_flags": [
      "Only 8 trades/fold -- Sharpe may be luck, not skill.",
+     "Edge over the benchmark: active deflated Sharpe 0.02 (<0.95 => not distinguishable from luck).",
      "Loses to the benchmark in down, chop; edge is one-regime."
     ]
    },
@@ -72,6 +76,7 @@
     "verdict": "dead",
     "red_flags": [
      "Only 3 trades/fold -- Sharpe may be luck, not skill.",
+     "Edge over the benchmark: active deflated Sharpe 0.03 (<0.95 => not distinguishable from luck).",
      "Loses to the benchmark in down, chop; edge is one-regime."
     ]
    },
@@ -85,6 +90,7 @@
     "verdict": "dead",
     "red_flags": [
      "Only 4 trades/fold -- Sharpe may be luck, not skill.",
+     "Edge over the benchmark: active deflated Sharpe 0.02 (<0.95 => not distinguishable from luck).",
      "Loses to the benchmark in up, down; edge is one-regime."
     ]
    },
@@ -98,6 +104,7 @@
     "verdict": "dead",
     "red_flags": [
      "Only 12 trades/fold -- Sharpe may be luck, not skill.",
+     "Edge over the benchmark: active deflated Sharpe 0.51 (<0.95 => not distinguishable from luck).",
      "294% of the edge over the benchmark came from 2022.",
      "Edge over the benchmark is fully explained by 2022; the other years net to <= 0."
     ]
@@ -112,6 +119,7 @@
     "verdict": "dead",
     "red_flags": [
      "Only 8 trades/fold -- Sharpe may be luck, not skill.",
+     "Edge over the benchmark: active deflated Sharpe 0.03 (<0.95 => not distinguishable from luck).",
      "Loses to the benchmark in up, down; edge is one-regime."
     ]
    }
@@ -328,7 +336,18 @@
   ],
   "sweep_beats_ew": "7/9",
   "sweep_significant": "0/9",
-  "status": "UNPROVEN -- clears the raw return bars, but the edge over EW-universe is not statistically distinguishable from luck (t=0.34, need ~2+); also 4 robustness flag(s) above. (0/9 sensitivity neighbors significant, t>=2; 7/9 beat EW on raw return) \u2014 pending Jonathan sign-off + paper trading",
+  "status": "INCONCLUSIVE -- (IR_hat=0.13, 95% CI upper 0.87 vs IR_MIN 0.50; power 25% over 7.0y, ~32y needed for 80%). clears the raw return bars, but the edge over EW-universe is not statistically distinguishable from luck (t=0.34, need ~2+); also 4 robustness flag(s) above. (0/9 sensitivity neighbors significant, t>=2; 7/9 beat EW on raw return) \u2014 pending Jonathan sign-off + paper trading",
+  "verdict": "INCONCLUSIVE",
+  "power": {
+   "verdict": "INCONCLUSIVE",
+   "t": 0.3435567186472335,
+   "ir_hat": 0.12985223411228097,
+   "years": 7.0,
+   "ir_ci_hi": 0.8706626012103663,
+   "ir_min": 0.5,
+   "power": 0.24916353205478647,
+   "years_for_80pct_power": 32.29876224
+  },
   "caveats": [
    "universe is survivorship-biased (today's liquid names)",
    "single history, no parameter search (nothing to overfit, but only one draw)",
