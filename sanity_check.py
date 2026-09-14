@@ -98,6 +98,54 @@ def main():
     check("deflated Sharpe does NOT manufacture edge on a random walk",
           not (dsr0 >= 0.95), f"noise deflated Sharpe = {dsr0:.3f} (want < 0.95)")
 
+    # 8. THE BETA TRAP. Deflated Sharpe measured against ZERO cannot tell drift from skill:
+    #    a trending series with no mean-reversion edge at all clears the 0.95 bar just by
+    #    going up. This is the exact statistic that produced the false "SURVIVES" verdict.
+    #    The ACTIVE version (vs the buy-and-hold benchmark) must refuse it.
+    #    (drift/n are set so the uptrend is unambiguous -- at the audit's n=1500, drift=0.0005
+    #    the realized path is a coin flip and only ~57% of seeds trend up at all, which would
+    #    test nothing. Here the trap fires on 40/40 seeds.)
+    from diagnostics import active_deflated_sharpe
+    from strategies import buy_and_hold, random_strategy
+    px_tr = synthetic_ohlcv(n=2500, kappa=0.0, drift=0.001)["close"]   # trending, no edge
+    bh_df, _ = run_backtest(px_tr, buy_and_hold(px_tr), CostModel(3, 1))
+    dsr_raw = deflated_sharpe_ratio(bh_df["net"].values, 1)
+    check("deflated Sharpe vs ZERO passes pure beta (the trap this fix cycle exists for)",
+          dsr_raw >= 0.95,
+          f"raw DSR (beta) = {dsr_raw:.3f} (want >= 0.95, documents the trap)")
+    rs_df, _ = run_backtest(px_tr, random_strategy(px_tr, seed=1), CostModel(3, 1))
+    adsr_rand = active_deflated_sharpe(rs_df, bh_df, 1)
+    check("ACTIVE deflated Sharpe refuses a coin-flip strategy on that same trend",
+          adsr_rand < 0.95,
+          f"active DSR (random vs B&H) = {adsr_rand:.3f} (want < 0.95)")
+    adsr_self = active_deflated_sharpe(bh_df, bh_df, 1)
+    check("ACTIVE deflated Sharpe is NaN for a strategy identical to its benchmark",
+          adsr_self != adsr_self,
+          f"active DSR (B&H vs itself) = {adsr_self} (want NaN -- no active return to test)")
+
+    # 9. THE PANEL GATE MUST NOT MANUFACTURE MOMENTUM. Build a panel of 30 INDEPENDENT
+    #    random walks with drift -- no cross-sectional structure, so ranking them is pure
+    #    noise. The cross-sectional momentum pipeline vs the EW-universe must come back
+    #    insignificant (t < 2) on the large majority of realizations; a well-calibrated
+    #    test is allowed its ~5% false positives, nothing more.
+    import pandas as pd
+    from xsect import (target_weights, run_panel, _ew_weights, _first_active,
+                       significance_vs_ew, LOOKBACK)
+    n_below_2 = 0
+    for outer in range(100):
+        panel = pd.DataFrame({
+            f"n{i:02d}": synthetic_ohlcv(n=1500, kappa=0.0, drift=0.0005,
+                                         seed=outer * 1000 + i)["close"]
+            for i in range(30)})
+        mom = _first_active(run_panel(panel, target_weights(panel)))
+        ew = _first_active(run_panel(panel, _ew_weights(panel, LOOKBACK)))
+        ew = ew.reindex(mom.index).dropna()          # same alignment xsect.main() uses
+        mom = mom.reindex(ew.index)
+        if significance_vs_ew(mom, ew, panel)["t"] < 2.0:
+            n_below_2 += 1
+    check("panel significance gate does not manufacture momentum on pure noise",
+          n_below_2 >= 95, f"{n_below_2}/100 seeds had t < 2 (want >= 95)")
+
     n_fail = sum(1 for ok, _, _ in results if not ok)
     print(f"\n{'='*48}\n{len(results)-n_fail}/{len(results)} checks passed.")
     if n_fail:
