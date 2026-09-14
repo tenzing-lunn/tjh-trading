@@ -40,8 +40,11 @@ supposed to bless — this is Tenzing's proposal for that list, not yet Henry's 
 **Result of re-running the engine live on the new 30-name universe (2026-07-06):**
 - `xsect.py` (Thesis 001, cross-sectional 12-1 momentum): momentum top-10 **+309.4%** vs EW
   universe **+284.5%** vs random top-10 **+276.5%** vs hold SPY **+179.7%**, 2019-08→2026-07.
-  Still beats all three bars; monthly probabilistic Sharpe still **1.00**; sensitivity sweep
-  **7/9** neighbors beat EW (vs 9/9 on the ~97 universe — a bit less broad, still solid); chop
+  Still beats all three bars on raw return; monthly probabilistic Sharpe still **1.00**
+  ~~; sensitivity sweep **7/9** neighbors beat EW (vs 9/9 on the ~97 universe — a bit less
+  broad, still solid)~~ (superseded 2026-09-13/14: PSR 1.00 is P(Sharpe>0), which every
+  baseline also scores ~1.00 on; the sweep's real significance count is 0/9 at t≥2, not
+  "7/9 beat EW" — see [[research/theses/001-cross-sectional-momentum]]); chop
   red flag improved to −22.4% (was −39.1% on the larger universe). The absolute numbers moved
   a lot (+972% → +309%) because it's a materially different, smaller universe — **this is a
   robustness cross-check on an independently different universe, not a restatement of the
@@ -97,7 +100,8 @@ single-ticker engine — a gap discovered 2026-07-03. Resolved by building it, i
 (1) `time_series_momentum` added to the single-name library and scanned (159 backtests,
 0 clean edges, but tsmom the strongest suspect family — the "hint" that justified step 2);
 (2) `xsect.py`, a cross-sectional panel engine (same shift(1) no-lookahead, same cost model,
-judged vs EW-universe + random picks + SPY). Thesis 001 **survives its first panel test**
+judged vs EW-universe + random picks + SPY). ~~Thesis 001 **survives its first panel
+test**~~ (superseded 2026-09-13: UNPROVEN, t=0.34 — see [[research/theses/001-cross-sectional-momentum]])
 (see [[plan/02-verdict-log]]). The run happened before Jonathan's signature in order to
 resolve the mismatch and produce evidence; his sign-off (and Henry's judgment) is still
 REQUIRED before any ADVANCE to paper trading — the ownership rule stands, the sequencing

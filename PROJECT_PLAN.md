@@ -62,8 +62,9 @@ See [[plan/01-decision-log]] 2026-07-06.
 ### research/ — the ideas
 - [[research/_thesis-template]] — copy this for every strategy idea
 - `research/theses/` — one file per hypothesis we test
-  - [[research/theses/001-cross-sectional-momentum]] — Thesis 001, SURVIVES its first panel
-    test, **pending Jonathan's signature**
+  - [[research/theses/001-cross-sectional-momentum]] — Thesis 001, **UNPROVEN** (2026-09-14:
+    the edge over EW-universe is not statistically distinguishable from luck, t=0.34),
+    **pending Jonathan's signature**
 
 ### notion-import/ — the beginner-friendly front door (2026-07-06)
 A ready-to-import Notion workspace structure for Jonathan & Henry, who haven't used Notion or

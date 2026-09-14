@@ -85,9 +85,12 @@ fix list, in its stated order (each step after P0.5 depends on P0.4 landing firs
 | P0.8 | **New sanity checks.** Audit §9, checks #8 (a trending-no-edge synthetic series passes the raw DSR gate but fails the active one — documents the exact trap that happened) and #9 (100-seed random panel must NOT trip `significance_vs_ew` on ≥95% of seeds). | `python3 sanity_check.py` passes all 9 checks; check #8's first assertion (raw DSR passes on beta) is true even on the CURRENT code, proving the trap existed; its second assertion (active DSR refuses it) only passes once P0.4/P0.6/P0.7 land | **Opus 5** | Validates the whole fix list did what it claims | P0.4, P0.6, P0.7 |
 | P1.7-pre | **Re-audit the fixes.** Same rule as before: the model that built P0.4-P0.8 doesn't grade its own homework. Confirm each fix matches its spec in §12, and that nothing new broke (e.g. re-run the beta-exposure experiments from §1/§2/§4.1 and confirm they now fail as expected). | A short addendum to `research/audits/2026-09-gates.md` or a new dated audit file, each of P0.4-P0.8 marked confirmed/wrong/unclear | **Fable 5.1** | Adversarial audit of Opus's own fix — the ground rule this whole exercise exists to enforce | P0.4, P0.5, P0.6, P0.7, P0.8 |
 
-**Progress (2026-09-14):** P0.1, P0.2, P0.5, P0.4, P0.6, P0.7 landed and committed
-(6265fa5, f8a320b, 69fa292, 3562acd, ccab48d, 44f8d03). P0.8 in flight. P0.3 and P1.7-pre
-not yet started.
+**Progress (2026-09-14):** Phase 0 complete. P0.1-P0.8 and P1.7-pre all landed and committed
+(6265fa5, f8a320b, 69fa292, 3562acd, ccab48d, 44f8d03, a9f5215, 4b45952, 900d7f6). P1.7-pre's
+adversarial re-audit (`research/audits/2026-09-14-p0-review.md`) confirmed the standing verdict
+(UNPROVEN, t=0.34) reproduces from three independent entry points and found no false positive;
+it left a short $0 fix list (its §7) of display/labelling issues that don't change any verdict.
+Phase 1: P1.1, P1.3, P1.5, P1.6 done; P1.2 not yet started; P1.4 in flight.
 
 ## Phase 1 — Proof: does momentum really work, beyond one lucky stretch?
 

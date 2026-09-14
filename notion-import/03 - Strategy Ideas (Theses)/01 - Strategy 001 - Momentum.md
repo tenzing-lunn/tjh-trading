@@ -1,7 +1,8 @@
 # Strategy 001 — "Buy the Winners" (Cross-Sectional Momentum)
 
-**Status: tested twice, survives both times, waiting on Jonathan's and Henry's sign-off.
-Nothing has been paper-traded or funded yet.**
+**Status: UNPROVEN (updated 2026-09-14). A deeper statistical check found the edge over
+"just own the whole test group" is not distinguishable from luck — see the correction note
+near the bottom. Nothing has been paper-traded or funded yet.**
 
 ## The claim
 Stocks that have outperformed over the trailing 12 months (excluding the most recent month)
@@ -60,6 +61,19 @@ on a different set of stocks is a good sign it's not a fluke tied to one specifi
   fake-money (paper) trading going forward is the real test of "does this keep working."
 - **No short-selling tested** — the "textbook" version of this strategy also bets against the
   worst-performing stocks, which we're not doing (too risky/impractical at our account size).
+
+## 🚩 Correction (2026-09-14): the numbers above weren't measuring the right thing
+Both result runs above beat "just own the whole group" by a wide margin, which looked
+convincing. A closer statistical check found the tools used to judge "is this margin real, or
+could it be luck?" were actually asking a different, easier question the whole time — one that
+almost any winning stock-picking strategy in a rising market would pass, whether or not the
+picks were actually skillful. Once fixed to ask the right question: the margin over "own the
+whole group" **is not statistically distinguishable from luck** (on the smaller 30-stock group:
+about a 1-in-3 chance this margin is noise, not skill — nowhere near confident). Most of the
+seven-year edge also turns out to come from a single year (2024) and a single stock (NVIDIA);
+without either one, the margin disappears or reverses. The "choppy markets" and "one 7-year
+stretch" catches above still stand and are now joined by this one. Bottom line: this idea has
+**not** been shown to work — it needs either a longer/different test or to be set aside.
 
 ## What's needed before this goes any further
 1. Jonathan reviews the economic reasoning above and signs off, amends it, or rejects it.
