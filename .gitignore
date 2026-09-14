@@ -10,6 +10,7 @@ venv/
 # Comment a line out if you DO want to share that data with the team
 realdata/
 realdata_archive_97/
+research_data/
 *.kronos.csv
 spy.csv
 qqq.csv

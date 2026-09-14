@@ -155,6 +155,55 @@ def robustness(res, spy_close):
     return {'psr': psr, 'months': int(len(monthly)), 'regimes': regimes, 'flags': flags}
 
 
+def _monthly_returns(net):
+    """Compound daily net returns into monthly returns -- exactly how robustness() does
+    it for the PSR, so the significance test speaks the same monthly language."""
+    return net.groupby([net.index.year, net.index.month]).apply(lambda x: (1 + x).prod() - 1)
+
+
+def _panel_margin(sub_panel, cost_model=ETF_COST):
+    """Total-return margin of momentum over EW-universe on a given panel, aligned to a
+    common live window the same way main() does (EW reindexed to momentum's window)."""
+    mom = _first_active(run_panel(sub_panel, target_weights(sub_panel), cost_model))
+    ew = _first_active(run_panel(sub_panel, _ew_weights(sub_panel, LOOKBACK), cost_model))
+    ew = ew.reindex(mom.index).dropna()
+    mom = mom.reindex(ew.index)
+    return compute_metrics(mom)['total_return'] - compute_metrics(ew)['total_return']
+
+
+def significance_vs_ew(res, ew_res, panel, cost_model=ETF_COST):
+    """The gate robustness() was missing: is momentum's edge OVER the EW-universe (not over
+    zero) statistically real, or just luck? Works on the monthly ACTIVE return
+    (momentum_monthly - ew_monthly) over the shared window.
+      * t-stat of the mean monthly active return (need ~2+ to believe it),
+      * a seeded 95% bootstrap CI on that mean (10k resamples),
+      * % of months momentum beat the EW-universe,
+      * remove-top-contributor: drop each ticker in turn, recompute the margin, and find the
+        one name whose removal shrinks momentum's edge the most (does the edge survive it?)."""
+    mom_m = _monthly_returns(res['net'])
+    ew_m = _monthly_returns(ew_res['net'])
+    active = (mom_m - ew_m).dropna()
+    n = len(active)
+    sd = active.std(ddof=1)
+    t = active.mean() / (sd / np.sqrt(n)) if sd > 0 else float('nan')
+    pct_won = float((active > 0).mean())
+
+    rng = np.random.default_rng(0)
+    boot_means = active.values[rng.integers(0, n, size=(10000, n))].mean(axis=1)
+    ci_lo, ci_hi = np.percentile(boot_means, [2.5, 97.5])
+
+    full_margin = _panel_margin(panel, cost_model)
+    margins = {tk: _panel_margin(panel.drop(columns=tk), cost_model) for tk in panel.columns}
+    # Largest DROP in the edge = smallest margin once that name is gone.
+    top = min(margins, key=margins.get)
+    margin_wo = margins[top]
+    return {'t': float(t), 'n_months': int(n), 'pct_won': pct_won,
+            'ci_lo': float(ci_lo), 'ci_hi': float(ci_hi),
+            'active_mean': float(active.mean()),
+            'top_contributor': top, 'full_margin': float(full_margin),
+            'margin_wo': float(margin_wo), 'still_beats': bool(margin_wo > 0)}
+
+
 def sweep(panel, cost_model=ETF_COST):
     """SENSITIVITY, not selection. Run the canonical spec's NEIGHBORS (lookback x top_n) and
     report the WHOLE neighborhood vs the EW-universe over each spec's own window. We do NOT
@@ -277,6 +326,19 @@ def main():
     else:
         print("  No robustness red flag fired (the survivorship caveat below still stands).")
 
+    # SIGNIFICANCE VS EW-UNIVERSE -- the gate robustness() was missing. PSR asks "does momentum
+    # make money?"; this asks "does momentum beat just owning the universe?" (the honest bar).
+    sig = significance_vs_ew(res, ew_res, panel)
+    print("\nSIGNIFICANCE VS EW-UNIVERSE (the missing gate):")
+    print(f"  Monthly active return (momentum - EW), {sig['n_months']} months:")
+    print(f"    t-stat: {sig['t']:.2f}  (need ~2+ to believe the edge is real, not luck)")
+    print(f"    mean active/mo: {sig['active_mean']*100:.2f}%   "
+          f"95% bootstrap CI [{sig['ci_lo']*100:.2f}%, {sig['ci_hi']*100:.2f}%]")
+    print(f"    months won: {sig['pct_won']*100:.0f}%  (coin-flip is 50%)")
+    print(f"  Remove top contributor ({sig['top_contributor']}): "
+          f"margin {sig['full_margin']*100:.1f}% -> {sig['margin_wo']*100:.1f}%  "
+          f"(momentum {'still beats' if sig['still_beats'] else 'now LOSES to'} EW without it)")
+
     # SENSITIVITY SWEEP -- neighbors of the canonical spec, to show it is not a knife-edge fluke.
     sw = sweep(panel)
     n_beat = sum(s['beats_ew'] for s in sw)
@@ -304,13 +366,19 @@ def main():
     print("  * Single history, no folds: there is nothing to fit (n_trials=1), but this is")
     print("    still ONE draw of history -- the per-year split, regime split, and probabilistic")
     print("    Sharpe above ARE that scrutiny; a live paper-trade is the real out-of-sample test.")
-    if beats_ew and beats_rand and beats_spy:
-        rob_note = ('robustness-checked with no red flag' if not flags
-                    else f'but {len(flags)} robustness flag(s) above temper it')
-        verdict = (f'SURVIVES the panel bar; {rob_note}. '
-                   f'Awaiting Jonathan sign-off (economic story) + Henry judgment.')
-    else:
+    if not (beats_ew and beats_rand and beats_spy):
         verdict = 'DOES NOT clear the bar -- selection added nothing beyond the universe'
+    elif sig['t'] < 2:
+        verdict = ('UNPROVEN -- clears the raw return bars, but the edge over EW-universe is '
+                   f'not statistically distinguishable from luck (t={sig["t"]:.2f}, need ~2+)'
+                   + (f'; also {len(flags)} robustness flag(s) above.' if flags else '.'))
+    elif flags:
+        verdict = (f'clears the raw bars and the edge over EW-universe is significant '
+                   f'(t={sig["t"]:.2f}), but {len(flags)} robustness flag(s) above temper it.')
+    else:
+        verdict = ('SURVIVES the panel bar; robustness-checked with no red flag and the edge '
+                   f'over EW-universe is significant (t={sig["t"]:.2f}). '
+                   f'Awaiting Jonathan sign-off (economic story) + Henry judgment.')
     print(f"\nVERDICT: {verdict}\n")
 
     # Record one panel verdict into the shared log. The logger stays a pure recorder --
@@ -318,7 +386,7 @@ def main():
     # bar for a survivorship-inflated panel is the EW-universe, so that (not buy&hold) is the
     # 'vs B&H' column; PSR stands in for the deflated Sharpe a single-name run would carry.
     if log:
-        clean = bool(beats_ew and beats_rand and beats_spy and not flags)
+        clean = bool(beats_ew and beats_rand and beats_spy and not flags and sig['t'] >= 2)
         append_verdict({
             "ticker": f"panel_{n_names}", "strategy": "xsect_momentum_12_1",
             "cost_regime": "3/1 bps (liquid ETF)", "run": "panel",
