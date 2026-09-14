@@ -21,16 +21,15 @@ symbol-month (rows, regular_rows, first/last timestamp, retrieval_time, source, 
 adjustment, status) so downstream code can tell what it's looking at without re-deriving it.
 
 ## Resumability
-A symbol-month already recorded in the manifest with status "ok" or "empty" is skipped.
+A past symbol-month recorded as "ok" is skipped only if its parquet still exists.
+Empty months are retried on the next run; a transient empty response is not permanent.
 The current (in-progress) calendar month is always refetched, since it's incomplete by
 definition. Writes go to a temp file then get renamed, so a crashed run never leaves a
 half-written parquet.
 
 ## Rate limiting
-Alpaca's free Basic plan allows 200 requests/min; get_stock_bars already pages internally
-at 10,000 bars/page and retries once on its own for 429/504. We additionally throttle
-between our own calls and retry-with-backoff (never skip silently) on any rate-limit error
-that escapes the client's built-in retry.
+Throttle each HTTP request, including SDK pagination and retries, to under 200/min.
+Only run one fetch process at a time: this limiter is local to this process.
 """
 import ast
 import json
@@ -49,7 +48,18 @@ from alpaca.data.enums import Adjustment, DataFeed
 OUT_DIR = "intraday"
 MANIFEST_PATH = os.path.join(OUT_DIR, "manifest.json")
 START = datetime(2016, 1, 1, tzinfo=timezone.utc)
-MIN_CALL_INTERVAL = 0.35   # seconds between top-level get_stock_bars calls (<< 200 req/min)
+MIN_CALL_INTERVAL = 0.35   # <=172 requests/min, including pages and retries
+
+
+class ThrottledStockClient(StockHistoricalDataClient):
+    """Rate limit the SDK's actual HTTP boundary, not just top-level month calls."""
+    _last_request = None
+
+    def _one_request(self, *args, **kwargs):
+        if self._last_request is not None:
+            time.sleep(max(0, MIN_CALL_INTERVAL - (time.monotonic() - self._last_request)))
+        self._last_request = time.monotonic()
+        return super()._one_request(*args, **kwargs)
 
 
 def _load_dotenv(path=".env"):
@@ -119,7 +129,6 @@ def fetch_month(client, symbol, month_start, month_end, retries=5):
     for attempt in range(retries):
         try:
             bars = client.get_stock_bars(req)
-            time.sleep(MIN_CALL_INTERVAL)
             return bars.df
         except Exception as e:
             msg = str(e).lower()
@@ -161,7 +170,9 @@ def fetch_symbol(client, symbol, manifest, now_cutoff):
         is_current = key == current_month_key
 
         existing = manifest[symbol].get(key)
-        if not is_current and existing and existing.get("status") in ("ok", "empty"):
+        path = os.path.join(sym_dir, f"{key}.parquet")
+        if (not is_current and existing and existing.get("status") == "ok"
+                and os.path.isfile(path)):
             print(f"  {symbol} {key}: skip (already {existing['status']})")
             continue
 
@@ -170,6 +181,8 @@ def fetch_symbol(client, symbol, manifest, now_cutoff):
         retrieval_time = datetime.now(timezone.utc).isoformat()
 
         if df is None or df.empty:
+            if existing and existing.get("status") == "ok":
+                raise RuntimeError(f"{symbol} {key}: empty refresh; keeping previous cache")
             manifest[symbol][key] = {
                 "rows": 0, "regular_rows": 0,
                 "first": None, "last": None,
@@ -178,12 +191,17 @@ def fetch_symbol(client, symbol, manifest, now_cutoff):
                 "status": "empty",
             }
             print(f"  {symbol} {key}: 0 rows -> empty")
+            save_manifest(manifest)
             continue
 
         df = df.reset_index()
         if "symbol" in df.columns:
             df = df.drop(columns=["symbol"])
         df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+        # API endpoints can be inclusive; keep file partitions disjoint.
+        df = df[(df["timestamp"] >= month_start) & (df["timestamp"] < month_end)]
+        if df.empty or df["timestamp"].duplicated().any():
+            raise ValueError(f"{symbol} {key}: empty partition or duplicate timestamps")
         df["regular"] = add_regular_flag(df)
         cols = ["timestamp", "open", "high", "low", "close", "volume",
                 "trade_count", "vwap", "regular"]
@@ -217,7 +235,7 @@ def main():
     base = universe_symbols()
     symbols = base + [s for s in extra if s not in base]
 
-    client = StockHistoricalDataClient(key, secret)
+    client = ThrottledStockClient(key, secret)
     now_cutoff = datetime.now(timezone.utc) - timedelta(minutes=16)
     manifest = load_manifest()
 
