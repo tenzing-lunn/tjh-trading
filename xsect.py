@@ -204,6 +204,37 @@ def significance_vs_ew(res, ew_res, panel, cost_model=ETF_COST):
             'margin_wo': float(margin_wo), 'still_beats': bool(margin_wo > 0)}
 
 
+def panel_verdict(m, m_ew, m_rand, spy_m, flags, sig):
+    """The ONE place the panel verdict is decided -- shared by the CLI (main()), the live
+    Engine Room (engine_api.run_momentum) and the track-record export, so no caller can
+    drift back to a point-comparison 'survives'. Order: raw return bars -> significance
+    over the EW-universe (t >= 2) -> robustness flags."""
+    beats_ew = bool(m['total_return'] > m_ew['total_return'])
+    beats_rand = bool(m['total_return'] > m_rand['total_return'])
+    beats_spy = bool(spy_m is None or m['total_return'] > spy_m['total_return'])
+    flags = flags or []
+    if not (beats_ew and beats_rand and beats_spy):
+        status = 'DOES NOT clear the bar -- selection added nothing beyond the universe'
+    elif sig['t'] < 2:
+        status = ('UNPROVEN -- clears the raw return bars, but the edge over EW-universe is '
+                  f'not statistically distinguishable from luck (t={sig["t"]:.2f}, need ~2+)'
+                  + (f'; also {len(flags)} robustness flag(s) above.' if flags else '.'))
+    elif flags:
+        status = (f'clears the raw bars and the edge over EW-universe is significant '
+                  f'(t={sig["t"]:.2f}), but {len(flags)} robustness flag(s) above temper it.')
+    else:
+        status = ('SURVIVES the panel bar; robustness-checked with no red flag and the edge '
+                  f'over EW-universe is significant (t={sig["t"]:.2f}). '
+                  f'Awaiting Jonathan sign-off (economic story) + Henry judgment.')
+    return {
+        'survives': bool(beats_ew and beats_rand and beats_spy and sig['t'] >= 2 and not flags),
+        'status': status,
+        'beats_ew': beats_ew, 'beats_random': beats_rand, 'beats_spy': beats_spy,
+        't_active': float(sig['t']), 'ci': [float(sig['ci_lo']), float(sig['ci_hi'])],
+        'pct_won': float(sig['pct_won']), 'top_contributor': sig['top_contributor'],
+    }
+
+
 def sweep(panel, cost_model=ETF_COST):
     """SENSITIVITY, not selection. Run the canonical spec's NEIGHBORS (lookback x top_n) and
     report the WHOLE neighborhood vs the EW-universe over each spec's own window. We do NOT
@@ -363,9 +394,8 @@ def main():
               f"{s['sharpe']:7.2f} {'YES' if s['beats_ew'] else 'no':>9s}{star}")
 
     print("\nThe bar that matters:")
-    beats_ew = m['total_return'] > m_ew['total_return']
-    beats_rand = m['total_return'] > m_rand['total_return']
-    beats_spy = spy_m is None or m['total_return'] > spy_m['total_return']
+    pv = panel_verdict(m, m_ew, m_rand, spy_m, flags, sig)
+    beats_ew, beats_rand, beats_spy = pv['beats_ew'], pv['beats_random'], pv['beats_spy']
     print(f"  beats EW universe:  {'YES' if beats_ew else 'NO'}   "
           f"(selection skill vs just owning these names)")
     print(f"  beats random picks: {'YES' if beats_rand else 'NO'}")
@@ -378,27 +408,14 @@ def main():
     print("  * Single history, no folds: there is nothing to fit (n_trials=1), but this is")
     print("    still ONE draw of history -- the per-year split, regime split, and probabilistic")
     print("    Sharpe above ARE that scrutiny; a live paper-trade is the real out-of-sample test.")
-    if not (beats_ew and beats_rand and beats_spy):
-        verdict = 'DOES NOT clear the bar -- selection added nothing beyond the universe'
-    elif sig['t'] < 2:
-        verdict = ('UNPROVEN -- clears the raw return bars, but the edge over EW-universe is '
-                   f'not statistically distinguishable from luck (t={sig["t"]:.2f}, need ~2+)'
-                   + (f'; also {len(flags)} robustness flag(s) above.' if flags else '.'))
-    elif flags:
-        verdict = (f'clears the raw bars and the edge over EW-universe is significant '
-                   f'(t={sig["t"]:.2f}), but {len(flags)} robustness flag(s) above temper it.')
-    else:
-        verdict = ('SURVIVES the panel bar; robustness-checked with no red flag and the edge '
-                   f'over EW-universe is significant (t={sig["t"]:.2f}). '
-                   f'Awaiting Jonathan sign-off (economic story) + Henry judgment.')
-    print(f"\nVERDICT: {verdict}\n")
+    print(f"\nVERDICT: {pv['status']}\n")
 
     # Record one panel verdict into the shared log. The logger stays a pure recorder --
     # every field here already came out of compute_metrics / robustness above. The honest
     # bar for a survivorship-inflated panel is the EW-universe, so that (not buy&hold) is the
     # 'vs B&H' column; PSR stands in for the deflated Sharpe a single-name run would carry.
     if log:
-        clean = bool(beats_ew and beats_rand and beats_spy and not flags and sig['t'] >= 2)
+        clean = pv['survives']
         append_verdict({
             "ticker": f"panel_{n_names}", "strategy": "xsect_momentum_12_1",
             "cost_regime": "3/1 bps (liquid ETF)", "run": "panel",

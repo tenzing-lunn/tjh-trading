@@ -19,6 +19,7 @@ from data import load_csv
 from scan import scan_universe, CANDIDATES, _verdict
 from xsect import (load_panel, target_weights, run_panel, _first_active,
                    month_end_mask, momentum_12_1, robustness, sweep,
+                   significance_vs_ew, panel_verdict,
                    EXCLUDE, TOP_N, ETF_COST)
 from metrics import compute_metrics
 
@@ -82,11 +83,19 @@ def thesis_001_summary():
         spy = spy_close_full.reindex(window).dropna()
         _, spy_m = run_backtest(spy, pd.Series(1.0, index=spy.index), ETF_COST)
 
+    # Baseline 3: random top-N picks each month, same machinery and seed as xsect.main --
+    # panel_verdict needs it to answer "would any 10 names have worked?".
+    rng = np.random.default_rng(1)
+    rand_res = _first_active(run_panel(
+        panel, target_weights(panel, picker=lambda row: rng.choice(
+            row.index, size=TOP_N, replace=False)))).reindex(window).dropna()
+
     rob = robustness(res, spy_close_full)          # PSR + regime split + red flags
     sw = sweep(panel)                              # sensitivity neighborhood
     n_beat = sum(s['beats_ew'] for s in sw)
 
     m, m_ew = compute_metrics(res), compute_metrics(ew_res)
+    m_rand = compute_metrics(rand_res)
     per_year = []
     for yr, g in res.groupby(res.index.year):
         ge = ew_res.reindex(g.index).dropna()
@@ -95,10 +104,12 @@ def thesis_001_summary():
             'momentum': float((1 + g['net']).prod() - 1),
             'ew_universe': float((1 + ge['net']).prod() - 1) if len(ge) else None,
         })
-    status = (f'SURVIVES the panel bar; robustness-checked (monthly PSR {rob["psr"]:.2f}, '
-              f'{n_beat}/{len(sw)} sensitivity neighbors beat EW)'
-              + (f'; {len(rob["flags"])} red flag tempers it' if rob['flags'] else '')
-              + ' — pending Jonathan sign-off + paper trading')
+    # The status is DERIVED, never asserted: the same xsect.panel_verdict the CLI and the
+    # live Engine Room use, so the committed JSON cannot claim a verdict the engine rejects.
+    sig = significance_vs_ew(res, ew_res, panel)
+    pv = panel_verdict(m, m_ew, m_rand, spy_m, rob['flags'], sig)
+    status = (f'{pv["status"]} ({n_beat}/{len(sw)} sensitivity neighbors beat EW) '
+              '— pending Jonathan sign-off + paper trading')
     return {
         'spec': f'12-1 cross-sectional momentum, monthly, top {TOP_N} of '
                 f'{panel.shape[1]} stocks, long-only, equal weight, n_trials=1',

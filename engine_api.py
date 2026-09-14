@@ -26,6 +26,7 @@ from metrics import compute_metrics
 from scan import scan_universe, _verdict, CANDIDATES, N_FOLDS, MIN_TRADES_PER_FOLD
 from xsect import (load_panel, target_weights, run_panel, _first_active,
                    month_end_mask, momentum_12_1, robustness, sweep,
+                   significance_vs_ew, panel_verdict,
                    EXCLUDE, TOP_N, ETF_COST)
 
 CACHE_DIR = 'data_cache'
@@ -342,9 +343,11 @@ def run_momentum(force=False):
     sw = sweep(panel)
     n_beat = sum(s['beats_ew'] for s in sw)
 
-    beats_ew = m['total_return'] > m_ew['total_return']
-    beats_rand = m['total_return'] > m_rand['total_return']
-    beats_spy = spy_m is None or m['total_return'] > spy_m['total_return']
+    # The verdict is decided in exactly one place (xsect.panel_verdict), so the live Engine
+    # Room cannot drift from the CLI's answer: raw bars AND the edge over the EW-universe
+    # being statistically real (t >= 2) AND no robustness flag.
+    sig = significance_vs_ew(res, ew_res, panel)
+    pv = panel_verdict(m, m_ew, m_rand, spy_m, rob['flags'], sig)
     elapsed = time.time() - t0
 
     return json_safe({
@@ -363,11 +366,7 @@ def run_momentum(force=False):
         'red_flags': rob['flags'],
         'sweep': sw,
         'sweep_beats_ew': f'{n_beat}/{len(sw)}',
-        'verdict': {
-            'beats_ew': bool(beats_ew), 'beats_random': bool(beats_rand),
-            'beats_spy': bool(beats_spy),
-            'survives': bool(beats_ew and beats_rand and beats_spy),
-        },
+        'verdict': pv,          # survives / status / beats_* / t_active / ci / pct_won
         'caveats': ["universe is survivorship-biased (today's liquid names) -- "
                     "'beats EW universe' is the honest bar, not the raw return",
                     'single history, no parameter search (n_trials=1, nothing to '
