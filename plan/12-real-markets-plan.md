@@ -91,14 +91,21 @@ adversarial re-audit (`research/audits/2026-09-14-p0-review.md`) confirmed the s
 (UNPROVEN, t=0.34) reproduces from three independent entry points and found no false positive;
 it left a short $0 fix list (its §7 items 1/2/3/5 landed in `3e06dfe`) of display/labelling
 issues that don't change any verdict.
-Phase 1: P1.1-P1.6 all done (`9d83945`, `65f4d2b`); P1.7 (Fable red-teams all of Phase 1) not
-yet started -- ready to launch, all its deps are met.
-**P1.4 headline (2026-09-14):** on the honest point-in-time S&P 500 universe (2009-2026, 500 of
-834 dead/live symbols priced so far, rest queued for future monthly Tiingo fetches), the 30-name
-2026 universe's EW baseline is inflated **+103 to +105 pp of total return** (2019-2026) versus
-the real one -- that gap *is* the measured survivorship + winner-selection bias. Momentum's
-active t vs EW rises from 0.34 (30-name) to 1.17-1.26 (full point-in-time universe) but stays
-below the t>=2 bar; verdict does not flip between optimistic/pessimistic missing-data brackets.
+Phase 1: P1.1-P1.7 all done (`9d83945`, `65f4d2b`, `906db50`). P1.7's audit
+(`research/audits/phase1.md`) found 6 WRONG items (all in P1.4/P1.5/P1.6, none flipping the
+verdict) and 2 UNCLEAR; P1.4's $0 fix list (fetch validation, rename-chain stitching, seam
+guards, drop corrupt series, fix TEST 5, add neutral-imputation bracket) is not yet applied.
+Ready for Gate G1.
+**P1.4 headline (2026-09-14, corrected by P1.7's audit -- see below):** on the honest
+point-in-time S&P 500 universe (2009-2026, 500 of 834 dead/live symbols priced so far, rest
+queued for future monthly Tiingo fetches), the 30-name 2026 universe's EW baseline is inflated
+**~+135 to +143 pp of total return** versus the real one -- that gap *is* the measured
+survivorship + winner-selection bias (originally reported as +103-105pp; P1.7 found and fixed
+a one-month date misalignment plus a rename-join artefact that understated it). Momentum's
+active t vs EW is **1.14-1.45 (2009-2026) / 1.72-1.78 (2019-2026 aligned)** -- still below the
+t>=2 bar in every construction; the opt/pess brackets do NOT bound the t-stat (both favor
+momentum -- see audit Finding D), so this is a three-way range, not two endpoints. **Provisional
+on 59% coverage with a tenure-biased exclusion of 2018+ index additions** (audit Finding E).
 Thesis 001 remains UNPROVEN even on the honest universe.
 **P1.2 headline (2026-09-14):** the century-long test (`research/theses/001-long-history.md`,
 Ken French top-momentum-decile minus the total market, 1927-01 to 2026-07, 1195 months, outside
