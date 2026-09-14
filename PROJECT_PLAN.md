@@ -51,6 +51,7 @@ See [[plan/01-decision-log]] 2026-07-06.
 - [[plan/10-verdict-and-diagnostics-spec]] — build spec: verdict auto-logger + robustness/red-flag diagnostics
 - [[plan/11-strategy-pipeline]] — **how we find/test/run/show strategies** (the merged scan→gate design)
 - [[plan/12-real-markets-plan]] — **what's missing for real markets** (2026-09-13): proof → paper plumbing → risk → taxes, each task assigned to a Claude model by difficulty, humans own the gates
+- [[plan/14-intraday-plan]] — **short-term scope** (2026-09-14): intraday + swing on free Alpaca SIP minute bars with the 15-min delay simulated; adopts the IQF document's data-quality / ledger / risk-gate / AI-authority ideas; three-way verdicts
 
 ### roles/ — who does what
 - [[roles/ROLE_Tenzing]] — engineering / the machine

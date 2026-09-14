@@ -8,6 +8,24 @@ When a decision changes, add a NEW entry that supersedes the old one (don't dele
 
 ---
 
+### 2026-09-14 — Scope moves to short-term (intraday + swing); 15-minute delay simulated, realtime feed deferred
+**Decision:** Strategy horizon is now **minutes → ~2 weeks**. Intraday is in scope, which
+supersedes the 2026-07-02 "park Kronos" decision. Data source: Alpaca's free SIP minute bars
+(2016→now, adjusted, verified with our keys 2026-09-14). We do **not** buy the ~$99/mo
+realtime SIP feed yet; every intraday test bakes the free plan's 15-minute delay into the
+engine, and the purchase is proposed only for a strategy that passes with it. From the
+"Integrated Quant Framework" document we adopt: fail-closed data quality, point-in-time
+timestamps, an experiment ledger, the backtest→replay→shadow→paper ladder, a risk gate outside
+the strategy, and — as the stated end goal — an AI layer that can execute on its own under a
+signed authority ladder it cannot modify. We reject signal-fusion, QUANTAXIS and OpenBB (for
+now), and skip Kafka/Prometheus/Kubernetes. Full plan: [[plan/14-intraday-plan]].
+**Also:** the panel verdict becomes three-way (PASS / FAIL / INCONCLUSIVE) with a power check;
+momentum's Gate G1 criterion 2 is restated as INCONCLUSIVE, not FAIL.
+**Why:** Phase 1 of plan/12 showed a monthly strategy can't reach t ≥ 2 on 7–17 years of data
+even if real (27–149 years needed). Daily-or-faster bets gather evidence ~20× faster. The
+charter already said swing; intraday is the deliberate scope change, now made.
+**Who:** Tenzing (Claude briefed the tradeoffs); Jonathan and Henry to ratify at G2.
+
 ### 2026-09-13 — Thesis 001 downgraded to unproven; new real-markets plan with model-assigned tasks
 **Decision:** Stop treating Thesis 001 as a survivor awaiting sign-off. Pause the sign-off →
 paper-trade path. Follow [[plan/12-real-markets-plan]] instead: Phase 0 (fix the gate) and
