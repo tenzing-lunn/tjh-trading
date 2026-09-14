@@ -135,13 +135,17 @@ def main():
     # URLs confirmed reachable
     momentum_url = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_CSV.zip"
     portfolios_url = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/10_Portfolios_Prior_12_2_CSV.zip"
+    # Mkt-RF + RF: needed to build the market return P1.2 measures momentum against.
+    factors_url = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip"
 
     momentum_output = "research_data/french/momentum_factor_monthly.csv"
     portfolios_output = "research_data/french/10_portfolios_momentum_monthly.csv"
+    factors_output = "research_data/french/ff3_factors_monthly.csv"
 
     try:
         fetch_and_parse_french_data(momentum_url, momentum_output, "Momentum Factor")
         fetch_and_parse_french_data(portfolios_url, portfolios_output, "10 Portfolios (Momentum)")
+        fetch_and_parse_french_data(factors_url, factors_output, "3 Factors (Mkt-RF, SMB, HML, RF)")
         print("\nDone. Data saved to research_data/french/")
     except Exception as e:
         print(f"\nError: {e}")
