@@ -17,7 +17,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started
 | **1. Harness** | costs/backtest/walkforward/metrics; no-lookahead verified | ✅ |
 | **2. Real data in** | adjusted daily bars via `fetch_data.py` (yfinance) or `fetch_alpaca.py` | 🟡 (universe SLIMMED ~97 → **30-name curated core** + SPY via `fetch_universe.py` on 2026-07-06 — quality over quantity, junk/leverage cut; old ~97 archived in `realdata_archive_97/`, not deleted; Henry to ratify) |
 | **3. First reasoned strategy** | Jonathan writes a thesis with a *why*; Tenzing implements it | 🟡 (Thesis 001 IMPLEMENTED + RUN 2026-07-03 — `xsect.py` panel engine + `time_series_momentum`; thesis doc now exists at [[research/theses/001-cross-sectional-momentum]] (written 2026-07-06); **awaiting Jonathan's signature** to close the loop) |
-| **4. Run + verdict** | run harness on a liquid ticker, record OOS-net-of-costs vs SPY | 🟡 (Thesis 001 **SURVIVES the panel bar** on TWO independent universes — +972% vs +265% EW on ~90 names (2026-07-05) AND +309% vs +285% EW on the new slimmed 30-name core (2026-07-06), both beat SPY+random; monthly PSR 1.00 both times; sensitivity 9/9 then 7/9 neighbors beat EW; chop red flag −39%→−22% on the smaller universe. Wide scan: 0/309 (100-name) then 0/93 (30-name) clean single-name edges — same honest null at 1/3 the compute. Henry's judgment + Jonathan sign-off before ADVANCE) |
+| **4. Run + verdict** | run harness on a liquid ticker, record OOS-net-of-costs vs SPY | 🟡 (Thesis 001 is **UNPROVEN**, not a survivor — 2026-09-13 found the edge over EW-universe is not distinguishable from luck (t=0.34, 30-name core); a 2026-09-14 audit found the "PSR 1.00"/"9/9 then 7/9 neighbors beat EW"/raw-return-regime numbers below were all testing "did this make money" not "did it beat EW", so none of them were real evidence either — corrected: active PSR 0.63, 0/9 sensitivity neighbors significant (best t=1.18), 156% of the edge from one year (2024), t drops to −0.03 ex-NVDA. Raw totals (kept for record): +972% vs +265% EW on ~90 names (2026-07-05), +309% vs +285% EW on the 30-name core (2026-07-06), both beat SPY+random on raw return. Wide scan: 0/309 (100-name) then 0/93 (30-name) clean single-name edges — that null still holds after the same gate fix (`scan.py`, P0.6). See [[research/theses/001-cross-sectional-momentum]] and [[research/audits/2026-09-gates]]. Henry's judgment + Jonathan sign-off before ADVANCE) |
 | **5. Web app v1** | Next.js + FastAPI visualizer; restyle to `webapp/MOCKUP.html` | ✅ (LIVE full-stack: https://webapp-zeta-liart.vercel.app + Render backend. 2026-07-03: restyled to mockup, defaults to real SPY, shows the real track record + Thesis 001. **2026-07-06: Engine Room added (`/engine`)** — `scan.py` + `xsect.py` wired into the live API via `engine_api.py` (self-populating data: Alpaca first, yfinance fallback, per-ticker provenance shown), every gate pass/fail expandable per row, plus a live Alpaca paper-account panel (correctly shows zero positions until stage 7 starts). Deploy note: Render needs `APCA_API_KEY_ID`/`APCA_API_SECRET_KEY` set in its dashboard before the deployed backend can use Alpaca — until then it degrades to yfinance-only) |
 | **6. Kronos for real** | run `forecast_kronos.py` non-mock on real tickers, read OOS row | ⏸️ **PARKED** — Kronos is strongest *intraday*; we trade *daily swing*. Only revisit if we ever choose to go intraday (phase-2 scope change, not made). See [[plan/01-decision-log]]. |
 | **7. Paper trade survivors** | only a strategy that passes stage 4 → `alpaca_paper.py` for weeks | ⬜ |
@@ -26,14 +26,19 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started
 ## The one thing blocking everything
 **2026-09-13 update: proof, before sign-offs.** A significance check found Thesis 001's edge
 over EW-universe is not distinguishable from luck (t = 0.34 on the 30-name core; it loses
-ex-NVDA). Stage 4 is downgraded to *unproven*. The next work is [[plan/12-real-markets-plan]]
-Phase 0–1 (fix the gate, then long-history and no-hindsight tests). The paragraph below is the
-pre-2026-09-13 view, kept for history.
+ex-NVDA). Stage 4 is downgraded to *unproven*. **2026-09-14 update:** a follow-up audit found
+the robustness numbers (probabilistic Sharpe, sensitivity sweep, regime split) that were
+reported alongside the original 2026-07 run were *also* testing the wrong question (raw
+return vs. zero instead of active return vs. EW-universe) — corrected numbers and the fix
+list are in [[plan/12-real-markets-plan]] Phase 0, and [[research/theses/001-cross-sectional-momentum]]
+carries the full corrected gauntlet. The next work is Phase 1 (long-history and no-hindsight
+tests). The paragraph below is the pre-2026-09-13 view, kept for history.
 
-**Human sign-offs, not the machine.** The first reasoned strategy (Thesis 001,
-cross-sectional momentum) is implemented AND run — it survives its first panel test.
-What's missing is people: Jonathan signs the thesis, Henry judges the verdict
-(real-or-survivorship), then paper trading via `alpaca_paper.py` (needs Alpaca keys).
+**Human sign-offs, not the machine (pre-2026-09-13 view, superseded above).** The first
+reasoned strategy (Thesis 001, cross-sectional momentum) is implemented AND run —
+~~it survives its first panel test~~ (now: UNPROVEN, t=0.34). What's missing is people:
+Jonathan signs the thesis, Henry judges the verdict (real-or-survivorship), then paper trading
+via `alpaca_paper.py` (needs Alpaca keys).
 
 ## Stack (decided)
 - **Broker/data:** Alpaca (Trading API, paper). Shared paper account via API keys. Setup: [[plan/08-alpaca-setup]].

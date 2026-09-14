@@ -1,7 +1,8 @@
 # Strategy Thesis 001 — Cross-Sectional 12-1 Momentum
 
 Home: [[PROJECT_PLAN]] · Author: drafted by Tenzing/Claude from the engine spec, **pending
-Jonathan's signature** · Status: **testing — survives first panel test, awaiting sign-off**
+Jonathan's signature** · Status: **UNPROVEN — the edge over EW-universe is not statistically
+distinguishable from luck (t=0.34); see the 2026-09-14 gate correction below**
 
 *This is the thesis document the process ([[roles/ROLE_Jonathan]], [[roles/standup-template]])
 calls for. It was written up AFTER the engine (`xsect.py`) was already built and run — see
@@ -53,8 +54,11 @@ neighbors:
 **What would kill it:** Failing to beat **equal-weighting the same universe** (that would mean
 the "selection" is really just survivorship — the universe itself, not stock-picking, is doing
 the work) — this is the bar that matters most, more than beating SPY. Also: failing to beat
-random top-10 picks, a probabilistic Sharpe below 0.95, or a one-year-wonder pattern (>60% of
-return from a single year).
+random top-10 picks, a **monthly active t-stat vs EW below 2** (see the 2026-09-14 correction
+below — a probabilistic Sharpe below 0.95 was the original criterion here, but that statistic
+turned out to be unfalsifiable for any long-only basket in a rising market: it can't tell
+selection skill from just owning stocks), or a one-year-wonder pattern (>60% of the *edge over
+EW*, not the raw return, from a single year).
 
 **My prediction (pre-registered):** *[Jonathan — this line is intentionally unfilled. The run
 below already happened (see the engine-mismatch note above), so your "prediction" here is
@@ -78,7 +82,9 @@ result is really measuring.]*
 - Beats random top-10 picks: **YES**
 - Beats holding SPY: **YES**
 
-**Per-year, momentum vs EW universe (won 5 of 8 years):**
+**Per-year, momentum vs EW universe** (won 5 of 8 years by raw-return *sign* — since shown to
+be the wrong question, see the 2026-09-14 correction below; this table is kept as the
+original, non-reproducible ~97-name run's historical record):
 | Year | Momentum | EW universe |
 |---|---:|---:|
 | 2019 | +7.7% | +13.4% |
@@ -90,17 +96,24 @@ result is really measuring.]*
 | 2025 | +19.8% | +22.1% |
 | 2026 (partial) | +78.3% | +12.9% |
 
-**Robustness gauntlet (`xsect.py` + `diagnostics.py`):**
-- Monthly probabilistic Sharpe: **1.00** (P(true Sharpe > 0) — not a fluke by this measure)
+**Robustness gauntlet (`xsect.py` + `diagnostics.py`) — as originally reported; superseded,
+see the 2026-09-14 correction below:**
+- Monthly probabilistic Sharpe: **1.00** (P(true Sharpe > 0) — not a fluke by this measure).
+  *Since shown to be P(Sharpe > 0) for momentum AND for every baseline (EW, random top-10 all
+  scored ≥0.996 too) — the statistic cannot distinguish selection skill from just owning a
+  rising basket of stocks.*
 - Sensitivity sweep (6/9/12-month lookback × top 5/10/15, reported as robustness, NOT
   selection — the pre-registered 12mo/top-10 stays the verdict): **9 of 9 neighbor
   specs beat their own EW-universe.** The edge is broad, not a knife-edge config.
-- Regime split (by SPY up/down/chop): up +1695%, down −2.0%, **chop −39.1%**.
+  *Since shown to be the sign of a total-return margin, not a significance test — on the
+  current 30-name universe zero of nine neighbors clear a real t≥2 bar (best t=1.18).*
+- Regime split (by SPY up/down/chop): up +1695%, down −2.0%, **chop −39.1%**. *Raw return —
+  a long-only book wins in up and loses in down/chop by construction; see the active-return
+  regime table below for what this says about the EDGE, not just ownership.*
 
-**🚩 Red flag:** Loses badly in choppy/sideways markets (−39.1%). This is a **bull-market
-vehicle**, not all-weather — momentum is known to whipsaw and crash when trends reverse
-sharply (see the 2009 momentum crash in the literature). Anyone signing this off should read
-that as "expect real pain in a choppy year," not "this always wins."
+**🚩 Red flag (as originally reported):** Loses badly in choppy/sideways markets (−39.1%).
+This is a **bull-market vehicle**, not all-weather. *Since shown to be a raw-return artifact —
+the corrected (active-return) regime read on the current universe is different; see below.*
 
 **Caveats (read before believing anything above):**
 - **Survivorship bias.** The universe is today's ~97 liquid names — every one "survived" to
@@ -114,8 +127,10 @@ that as "expect real pain in a choppy year," not "this always wins."
 - **No short leg tested.** The "true" academic momentum thesis pairs winners with a short of
   losers; we test long-only only, by design (shorting isn't practical at this account size).
 
-**Status:** `SURVIVES the panel bar; robustness-checked (monthly PSR 1.00, 9/9 sensitivity
-neighbors beat EW); 1 red flag tempers it — pending Jonathan sign-off + paper trading.`
+**Status (superseded 2026-09-13, see the 2026-09-14 correction below):** ~~`SURVIVES the panel
+bar; robustness-checked (monthly PSR 1.00, 9/9 sensitivity neighbors beat EW); 1 red flag
+tempers it — pending Jonathan sign-off + paper trading.`~~ Current: `UNPROVEN — the edge over
+EW-universe is not statistically distinguishable from luck (t=0.34, need ~2+).`
 
 **Verdict:** **ITERATE → paper?** Not yet ADVANCE. Per [[plan/11-strategy-pipeline]] §3 Gate 4,
 a green number needs Jonathan's economic story AND Henry's judgment before it's believed, and
@@ -134,11 +149,15 @@ genuine out-of-universe robustness check, not a rerun of the same test:
 | EW universe (30 names) | +284.5% | 1.01 |
 | Hold SPY | +179.7% | 0.85 |
 
-Still beats EW-universe, random, and SPY. Monthly PSR still **1.00**. Sensitivity sweep **7/9**
-neighbors beat EW (down from 9/9 on the larger universe — still a majority, a bit less broad).
-Chop-regime red flag actually improved: **−22.4%** (was −39.1% on ~97 names). The headline
-number moved a lot (+972% → +309%) purely because it's a smaller, different set of stocks —
-that's expected and is not a contradiction; both runs are logged in [[plan/02-verdict-log]].
+Still beats EW-universe, random, and SPY on raw return. Monthly PSR still **1.00** *(as
+originally reported — see the 2026-09-14 correction below: this is P(Sharpe>0), which the
+EW-universe and random top-10 also score ~1.00 on)*. Sensitivity sweep **7/9** neighbors beat
+EW on raw-return sign (down from 9/9 on the larger universe) *— since shown to be zero of nine
+significant at t≥2 (best t=1.18), see below*. Chop-regime red flag actually improved:
+**−22.4%** (was −39.1% on ~97 names) *— raw return; the active (vs EW) regime read is
+different, see below*. The headline number moved a lot (+972% → +309%) purely because it's a
+smaller, different set of stocks — that's expected and is not a contradiction; both runs are
+logged in [[plan/02-verdict-log]].
 **Read this as:** the edge isn't an artifact of one specific 97-stock universe — it shows up
 again on an independently chosen smaller set. It is still NOT a second independent time period
 (same 2019–2026 window both times), so this doesn't touch the "single history" caveat above.
@@ -155,6 +174,46 @@ again on an independently chosen smaller set. It is still NOT a second independe
 | 50 bps | 282.6% | 284.5% | −1.8% | **NO** |
 
 **Verdict:** Momentum's edge over EW persists through 25 bps total cost, but turns negative at 50 bps. For real-money trading, this is a meaningful bound: retail options (300+ bps spread) would be ruin; even equities at 10 bps (0.5 × 20 bps spread, roughly ATM for a micro-cap or high-slippage fill) would leave momentum with a 22% margin. At 50 bps, the premium evaporates — the strategy regresses to the universe. **Cost regime is a first-order input to any real trade.** The canonical xsect.py run uses 3/1 bps (spread_bps=3, slippage_bps=1, effective 2.5 bps per turnover), which is tighter than the "3 bps" row here; the true baseline momentum return at that regime is **309.4%** (from the xsect.py main() output above).
+
+## Gate correction (2026-09-14): the robustness gauntlet was testing the wrong question
+
+A 2026-09-13 significance check (P0.1) found momentum's edge over the EW-universe is not
+distinguishable from luck (t=0.34). A follow-up audit
+([[research/audits/2026-09-gates]]) found this wasn't an isolated bug: almost every
+statistical gate in the codebase — including every "robustness" number reported above — asked
+"did this make money?" (vs. zero) instead of "did this beat its benchmark?" A long-only
+portfolio in a rising market answers the first question YES regardless of any selection
+skill, so **the probabilistic Sharpe, the sensitivity sweep's "N/9 beat EW," and the raw-return
+regime/per-year splits above all measured ownership, not edge.** Fixed in `diagnostics.py` and
+`xsect.py` (plan/12 tasks P0.4, P0.6, P0.7); this section gives the corrected numbers for the
+current 30-name universe (the ~97-name run above cannot be recomputed — that universe was
+later slimmed and its raw data is no longer fetched).
+
+**Corrected robustness gauntlet (30-name core, `xsect.py`, run 2026-09-14):**
+- **Probabilistic Sharpe, active vs EW-universe: 0.63** (was 1.00 vs zero — the vs-zero number
+  is kept only as a reference showing why it's not the gate: EW-universe and random top-10 both
+  also score ~1.00 on it).
+- **Sensitivity sweep: 0 of 9 neighbors significant at t≥2 (best t=1.18).** 7/9 still have a
+  positive raw-return margin vs EW — a point comparison, not evidence of breadth.
+- **One-year-wonder (active series): 156% of the seven-year edge over EW came from 2024;**
+  the other seven years net to ≤0 in log terms. The raw-return per-year table above (which
+  reported "won 5 of 8 years") could not see this because raw return is mostly beta, spread
+  evenly across every year.
+- **Regime split, active vs EW-universe (SPY up/down/chop, lookahead-corrected trend tag):**
+  up −7.8%, down **+16.8%**, chop −1.1% (1171/331/237 bars). This is a different, more precise
+  story than "bull-market vehicle": momentum's *edge* is weakest in up markets and chop, and
+  actually strongest in down markets — the raw regime numbers above conflated the strategy's
+  overall direction (long-only, wins in up markets by construction) with whether *selection*
+  added anything in each regime.
+- **Significance vs EW-universe (unchanged from the 2026-09-13 finding, now cross-checked):**
+  t = 0.34 (Newey-West HAC t = 0.41, correcting for autocorrelation — same conclusion).
+  Removing the top contributor (NVDA): **t drops to −0.03** — the edge is not just
+  concentrated in one year, it depends on one name.
+
+**Status:** `UNPROVEN` (unchanged from the 2026-09-13 finding — this correction changes *why*
+the robustness numbers can't be trusted, not the headline verdict itself, which was already
+right). Kill criteria updated in the spec section above: "probabilistic Sharpe < 0.95" →
+"active t-stat vs EW < 2".
 
 ## What we learned
 *[Henry — fill in your judgment here: real edge or survivorship? Any additional flags?]*
