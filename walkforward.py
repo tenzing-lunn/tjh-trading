@@ -5,11 +5,13 @@ computed on the full series; only PARAMETER SELECTION must respect the boundary.
 import numpy as np
 import pandas as pd
 from backtest import run_backtest
-from metrics import compute_metrics
+from metrics import compute_metrics, infer_ppy
 
 
 def walk_forward(prices, strat_factory, param_grid, cost_model,
-                 n_folds=5, ppy=252, select='sharpe'):
+                 n_folds=5, ppy=None, select='sharpe'):
+    if ppy is None:                  # once, from the FULL series -- fold slices reuse it
+        ppy = infer_ppy(prices.index)
     precomp = {}
     for i, params in enumerate(param_grid):
         out, _ = run_backtest(prices, strat_factory(params)(prices), cost_model, ppy)

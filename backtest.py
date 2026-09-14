@@ -9,7 +9,8 @@ import pandas as pd
 from metrics import compute_metrics
 
 
-def run_backtest(prices, positions, cost_model, periods_per_year=252):
+def run_backtest(prices, positions, cost_model, periods_per_year=None):
+    """`periods_per_year` None -> inferred from prices.index (metrics.infer_ppy)."""
     prices = prices.astype(float)
     rets = prices.pct_change().fillna(0.0)
     pos = positions.reindex(prices.index).fillna(0.0).clip(-1, 1)
