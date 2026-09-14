@@ -1,15 +1,64 @@
 """Performance metrics. Equity is recomputed from net returns so this works on
 any slice of a backtest (needed for walk-forward fold scoring)."""
 import numpy as np
+import pandas as pd
+
+DAILY_PPY = 252           # trading days per year
+SESSION_MINUTES = 390     # US regular session, 09:30-16:00
 
 
-def compute_metrics(df, ppy=252):
+def infer_ppy(index):
+    """Periods-per-year from a DatetimeIndex's median bar spacing (the same approach as
+    forecast_kronos.infer_step). Counts TRADING time, not calendar time:
+      daily -> 252;  weekly -> 52;  monthly -> 12;
+      intraday k-minute regular-session bars -> 252 * 390 / k  (1-min 98,280; 5-min 19,656;
+      hourly 1,638).
+    Raises ValueError instead of guessing when the spacing is irregular, falls between
+    buckets, or the bars look like extended hours (more bars per day than a regular session
+    holds) -- pass an explicit ppy in those cases."""
+    if not isinstance(index, pd.DatetimeIndex):
+        raise ValueError(f"cannot infer ppy from a {type(index).__name__}; pass ppy explicitly")
+    if len(index) < 3:
+        raise ValueError(f"cannot infer ppy from {len(index)} bars; pass ppy explicitly")
+    if not index.is_monotonic_increasing:
+        raise ValueError("cannot infer ppy from an unsorted index; pass ppy explicitly")
+    diffs = pd.Series(index).diff().dropna()
+    step = diffs.median()
+    days = step / pd.Timedelta(days=1)
+    if step < pd.Timedelta(hours=20):
+        minutes = step / pd.Timedelta(minutes=1)
+        if minutes != int(minutes) or not 1 <= minutes <= SESSION_MINUTES:
+            raise ValueError(f"intraday bar spacing {step} is not a whole number of minutes "
+                             f"within one session; pass ppy explicitly")
+        if (diffs == step).mean() < 0.5:
+            raise ValueError(f"irregular intraday spacing (median {step} covers <50% of bars); "
+                             f"pass ppy explicitly")
+        per_session = SESSION_MINUTES / minutes
+        per_day = pd.Series(1, index=index).groupby(index.normalize()).size().median()
+        if per_day > np.ceil(per_session) + 1:
+            raise ValueError(f"{per_day:.0f} bars/day exceeds a {SESSION_MINUTES}-min regular "
+                             f"session at {step} bars (extended hours?); pass ppy explicitly")
+        ppy = DAILY_PPY * SESSION_MINUTES / minutes
+        return int(ppy) if ppy == int(ppy) else ppy
+    if 0.8 <= days <= 4:
+        return DAILY_PPY
+    if 5 <= days <= 9:
+        return 52
+    if 25 <= days <= 35:
+        return 12
+    raise ValueError(f"bar spacing {step} matches no known frequency; pass ppy explicitly")
+
+
+def compute_metrics(df, ppy=None):
+    """`ppy` None -> inferred from df.index (infer_ppy); an explicit value always wins."""
     net = df['net'].values
     n = len(net)
     if n == 0:
         return {k: np.nan for k in
                 ['total_return','cagr','sharpe','ann_vol','max_drawdown',
                  'num_trades','avg_turnover','win_rate','ev_per_trade_frac','bars']}
+    if ppy is None:
+        ppy = infer_ppy(df.index)
     eq = np.cumprod(1 + net)
     total_return = eq[-1] - 1
     years = n / ppy
@@ -29,7 +78,7 @@ def compute_metrics(df, ppy=252):
             'win_rate':win_rate,'ev_per_trade_frac':ev,'bars':n}
 
 
-def active_metrics(df, bench_df, ppy=252):
+def active_metrics(df, bench_df, ppy=None):
     """Benchmark-relative metrics: how much of this is skill and how much is just the
     benchmark? `bench_df` is the benchmark's backtest output under the SAME cost model;
     the two are aligned on their shared index and bars missing on either side are dropped.
@@ -46,7 +95,9 @@ def active_metrics(df, bench_df, ppy=252):
             'beta','alpha_ann','pct_bars_won']
     if n < 2:
         return dict({k: np.nan for k in keys}, bars=n)
-    rs = df['net'].reindex(a.index).values
+    if ppy is None:
+        ppy = infer_ppy(a.index)
+    rs =df['net'].reindex(a.index).values
     rb = bench_df['net'].reindex(a.index).values
     av = a.values
     sd = av.std(ddof=1)

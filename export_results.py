@@ -23,7 +23,7 @@ import pandas as pd
 from data import synthetic_ohlcv, load_csv, quality_report
 from costs import CostModel
 from backtest import run_backtest
-from metrics import compute_metrics
+from metrics import compute_metrics, infer_ppy
 from strategies import (buy_and_hold, random_strategy, sma_crossover,
                         mean_reversion, kronos_signal)
 from walkforward import walk_forward
@@ -184,7 +184,7 @@ def build_payload(df, name, source, dq, forecast=None, display_cost=None):
         'meta': {
             'name': name, 'source': source, 'bars': int(len(px)),
             'start': dates[0].strftime('%Y-%m-%d'), 'end': dates[-1].strftime('%Y-%m-%d'),
-            'periods_per_year': 252,
+            'periods_per_year': infer_ppy(px.index),
             'display_regime': display_key,
         },
         'data_quality': dq,

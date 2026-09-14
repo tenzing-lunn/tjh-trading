@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 from backtest import run_backtest
-from metrics import compute_metrics
+from metrics import compute_metrics, infer_ppy, DAILY_PPY
 
 _EULER = 0.5772156649015329          # Euler-Mascheroni constant, for E[max of N normals]
 
@@ -79,15 +79,21 @@ def _moments(x):
 
 
 # ---- deflated Sharpe --------------------------------------------------------------------
-def deflated_sharpe_ratio(net, n_trials, trial_sharpes=None, ppy=252):
+def deflated_sharpe_ratio(net, n_trials, trial_sharpes=None, ppy=None):
     """P(the OOS Sharpe is real, not the luckiest of `n_trials`). In [0,1]; >=0.95 = significant.
 
-    net           : array of OOS net (per-bar) returns.
+    net           : OOS net (per-bar) returns -- array, or a Series with a DatetimeIndex.
     n_trials      : how many configs were searched (grid size) -- the multiple-testing count.
     trial_sharpes : annualized Sharpes of all searched configs (their dispersion sets the bar
                     the best-of-N must clear). If omitted, falls back to the Sharpe estimator's
                     own sampling variance -- less exact, still directional.
+    ppy           : only used to de-annualize `trial_sharpes`. None -> inferred from `net`'s
+                    DatetimeIndex; for an index-less array it falls back to DAILY_PPY (252),
+                    the legacy daily convention -- NON-DAILY ARRAY CALLERS MUST PASS ppy.
     """
+    if ppy is None and trial_sharpes is not None and len(np.asarray(trial_sharpes)) > 1:
+        idx = getattr(net, 'index', None)
+        ppy = infer_ppy(idx) if isinstance(idx, pd.DatetimeIndex) else DAILY_PPY
     net = np.asarray(net, float)
     net = net[~np.isnan(net)]
     T = len(net)
@@ -106,9 +112,11 @@ def deflated_sharpe_ratio(net, n_trials, trial_sharpes=None, ppy=252):
     return float(_norm_cdf((sr - sr0) * math.sqrt(T - 1) / denom))
 
 
-def config_sharpes(px, fn, grid, cost_model, ppy=252):
+def config_sharpes(px, fn, grid, cost_model, ppy=None):
     """Full-sample net Sharpe of every config in the grid -- the trial-Sharpe distribution the
     grid search maximizes over (input to the deflated Sharpe). Cheap: one backtest per config."""
+    if ppy is None:
+        ppy = infer_ppy(px.index)
     out = []
     for params in grid:
         _, m = run_backtest(px, fn(px, **params), cost_model, ppy)
@@ -128,10 +136,12 @@ def active_returns(strat_df, bench_df):
     return a.dropna()
 
 
-def config_active_sharpes(px, fn, grid, cost_model, bench_pos, ppy=252):
+def config_active_sharpes(px, fn, grid, cost_model, bench_pos, ppy=None):
     """Annualized ACTIVE Sharpe of every config in the grid -- (config net - benchmark net).
     The trial distribution `active_deflated_sharpe` needs; the active analogue of
     `config_sharpes`. `bench_pos` is the benchmark's position Series (e.g. buy_and_hold(px))."""
+    if ppy is None:
+        ppy = infer_ppy(px.index)
     bench, _ = run_backtest(px, bench_pos, cost_model, ppy)
     out = []
     for params in grid:
@@ -142,20 +152,22 @@ def config_active_sharpes(px, fn, grid, cost_model, bench_pos, ppy=252):
     return out
 
 
-def active_deflated_sharpe(strat_df, bench_df, n_trials, trial_active_sharpes=None, ppy=252):
+def active_deflated_sharpe(strat_df, bench_df, n_trials, trial_active_sharpes=None, ppy=None):
     """P(the strategy's edge OVER the benchmark is real, not the luckiest of `n_trials`).
     This is the number a gate may consume; `deflated_sharpe_ratio` (vs zero) is display only.
 
     `trial_active_sharpes` must be ACTIVE Sharpes (see `config_active_sharpes`) or the null
     threshold is in the wrong units. NaN when the active series has no variance -- a strategy
     identical to its benchmark has no edge to test (B&H vs B&H is NaN, not 0.5)."""
-    return deflated_sharpe_ratio(active_returns(strat_df, bench_df).values,
+    return deflated_sharpe_ratio(active_returns(strat_df, bench_df),   # Series: ppy inferable
                                  n_trials, trial_active_sharpes, ppy)
 
 
 # ---- consistency: per-year, regime ------------------------------------------------------
-def per_year_returns(net_series, ppy=252, bench=None):
+def per_year_returns(net_series, ppy=None, bench=None):
     """List of {period, return, sharpe, bars} per calendar year of the OOS net series.
+    Grouped by calendar year of the index, so intraday (and tz-aware) indexes work too;
+    `ppy` None -> inferred from the index.
 
     `bench` (optional): the benchmark's per-bar net return. When given, each row also
     carries `'active'` -- the year's return OVER the benchmark's own return on the same
@@ -163,8 +175,10 @@ def per_year_returns(net_series, ppy=252, bench=None):
     beta spread across every year, so the flag stays silent even when the whole EDGE is
     one year. Omitted entirely (not None) when `bench` is None, so existing callers see
     exactly the old output."""
+    if ppy is None:
+        ppy = infer_ppy(net_series.index)
     rows = []
-    for period, grp in net_series.groupby(net_series.index.to_period('Y')):
+    for period, grp in net_series.groupby(net_series.index.year):
         v = grp.values
         sd = v.std(ddof=1) if len(v) > 1 else 0.0
         row = {'period': str(period), 'return': float(np.prod(1 + v) - 1),
@@ -281,7 +295,7 @@ def red_flags(metrics, diag):
     return out
 
 
-def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=252,
+def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=None,
              bench_df=None, trial_active_sharpes=None):
     """Full diagnostics dict for one walk-forward OOS result (`oos` = walk_forward's combined
     DataFrame with a 'net' column). Assembles per-year, deflated Sharpe, regime split, and
@@ -292,7 +306,10 @@ def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=2
     carries `deflated_sharpe_active` -- the benchmark-relative number a gate should consume --
     and the per-year / regime cells carry their ACTIVE counterparts, which is what switches
     the one-year-wonder and regime red flags from "did it make money" to "did it beat the
-    benchmark". Without it every flag stays on raw return, exactly as before."""
+    benchmark". Without it every flag stays on raw return, exactly as before.
+    `ppy` None -> inferred once from oos.index and passed to everything below."""
+    if ppy is None:
+        ppy = infer_ppy(oos.index)
     m = compute_metrics(oos, ppy)
     net = oos['net'].dropna()
     bench_net = bench_df['net'] if bench_df is not None else None
