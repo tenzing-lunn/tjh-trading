@@ -5,3 +5,7 @@ numpy>=1.24
 # Optional, NOT needed to run the harness on synthetic or cached CSV data:
 #   yfinance>=0.2     # only for fetch_data.py (pull real SPY/QQQ locally)
 #   torch, huggingface_hub  # only for a REAL forecast_kronos.py run (not --mock)
+
+# Intraday data (fetch_intraday.py + downstream engines, plan/14 I1.1). Run LOCALLY.
+pyarrow>=14
+duckdb>=0.10
