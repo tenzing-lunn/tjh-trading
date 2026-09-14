@@ -101,18 +101,19 @@ def _alpaca_keys():
 
 def _fetch_alpaca(symbols):
     """One batched StockBarsRequest for all `symbols` (same client/adjustment settings
-    as fetch_alpaca.py: Adjustment.ALL, free IEX feed). Returns {sym: path} for every
-    symbol Alpaca actually served; raises only if the whole request fails."""
+    as fetch_alpaca.py: Adjustment.ALL, SIP feed for full-market depth). Returns {sym: path}
+    for every symbol Alpaca actually served; raises only if the whole request fails."""
     from alpaca.data.historical import StockHistoricalDataClient
     from alpaca.data.requests import StockBarsRequest
     from alpaca.data.timeframe import TimeFrame
-    from alpaca.data.enums import Adjustment
+    from alpaca.data.enums import Adjustment, DataFeed
 
     key, secret = _alpaca_keys()
     client = StockHistoricalDataClient(key, secret)
     start = (datetime.utcnow() - timedelta(days=365 * FETCH_YEARS)).strftime('%Y-%m-%d')
+    end = (datetime.utcnow() - timedelta(minutes=16)).strftime('%Y-%m-%d')
     req = StockBarsRequest(symbol_or_symbols=list(symbols), timeframe=TimeFrame.Day,
-                           start=start, adjustment=Adjustment.ALL)
+                           start=start, end=end, feed=DataFeed.SIP, adjustment=Adjustment.ALL)
     df = client.get_stock_bars(req).df
     out = {}
     if df is None or df.empty:
@@ -227,7 +228,7 @@ def _result(manifest, age):
             'cache_age_seconds': round(age),
             'ttl_seconds': TTL_SECONDS,
             'source': f'daily bars, {FETCH_YEARS}y, split/dividend-adjusted '
-                      '(Alpaca IEX feed first, yfinance fallback)',
+                      '(Alpaca SIP feed first, yfinance fallback)',
             'alpaca_configured': bool(_alpaca_keys()[0] and _alpaca_keys()[1]),
         },
     })
