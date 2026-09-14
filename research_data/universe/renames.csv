@@ -1,0 +1,45 @@
+# Ticker renames / spin-off symbol changes (class D joins). NOT EXHAUSTIVE.
+# Built by fetch_membership.py on 2026-09-14. source=hand is verified by a
+# human; source=auto is "one span ends + one starts the same day with no
+# Wikipedia row", trusted only from 2015-01-01 on (see detect_renames).
+old_ticker,new_ticker,effective_date,source,note
+BF.B,BF-B,1996-01-02,hand,punctuation only -- Tiingo spells class shares with a dash
+BRK.B,BRK-B,1996-01-02,hand,punctuation only -- Tiingo spells class shares with a dash
+FII,FHI,2013-01-02,hand,Federated Investors -> Federated Hermes (2021)
+WYND,TNL,2018-05-31,hand,Wyndham Destinations -> Travel + Leisure (2021)
+KORS,CPRI,2018-09-19,hand,Michael Kors -> Capri Holdings
+HRS,LHX,2019-06-01,hand,Harris -> L3Harris Technologies
+DWDP,DD,2019-06-03,hand,DowDuPont -> DuPont de Nemours
+TMK,GL,2019-08-08,hand,Torchmark -> Globe Life
+BHGE,BKR,2019-10-18,hand,Baker Hughes a GE company -> Baker Hughes
+SYMC,NLOK,2019-11-05,hand,Symantec -> NortonLifeLock (then NLOK -> GEN)
+CBS,VIAC,2019-12-05,hand,CBS/Viacom re-merger -> ViacomCBS (then VIAC -> PARA)
+JEC,J,2019-12-10,hand,Jacobs Engineering -> Jacobs Solutions
+UTX,RTX,2020-04-03,hand,United Technologies -> Raytheon Technologies
+ADS,BFH,2020-06-22,hand,Alliance Data Systems -> Bread Financial (2022)
+CTL,LUMN,2020-09-18,hand,CenturyLink -> Lumen Technologies
+MYL,VTRS,2020-11-17,hand,Mylan -> Viatris (Upjohn combination)
+HFC,DINO,2021-06-04,hand,"HollyFrontier -> HF Sinclair (2022, after the index exit)"
+LB,BBWI,2021-08-03,hand,L Brands -> Bath & Body Works
+COG,CTRA,2021-10-04,hand,Cabot Oil & Gas -> Coterra Energy
+WLTW,WTW,2022-01-10,hand,Willis Towers Watson ticker change
+GPS,GAP,2022-02-02,hand,"Gap Inc; ticker GPS -> GAP in 2024, after the index exit"
+VIAC,PARA,2022-02-17,hand,ViacomCBS -> Paramount Global
+BLL,BALL,2022-05-10,hand,Ball Corporation ticker change
+FB,META,2022-06-09,hand,Facebook -> Meta Platforms
+ANTM,ELV,2022-06-28,hand,Anthem -> Elevance Health
+NLOK,GEN,2022-11-08,hand,NortonLifeLock -> Gen Digital
+FBHS,FBIN,2022-12-19,hand,Fortune Brands Home & Security -> Fortune Brands Innovations
+PKI,RVTY,2023-05-16,hand,PerkinElmer -> Revvity
+FISV,FI,2023-06-07,hand,Fiserv ticker change
+RE,EG,2023-07-10,hand,Everest Re -> Everest Group
+ABC,COR,2023-08-30,hand,AmerisourceBergen -> Cencora
+CDAY,DAY,2024-02-01,hand,Ceridian -> Dayforce
+PEAK,DOC,2024-03-04,hand,Healthpeak Properties ticker change
+FLT,CPAY,2024-03-25,hand,FLEETCOR -> Corpay
+WRK,SW,2024-07-08,hand,WestRock -> Smurfit WestRock
+PARA,PSKY,2025-08-08,auto,"same-day span handoff, no Wikipedia row"
+FI,FISV,2025-11-11,auto,"same-day span handoff, no Wikipedia row"
+MMC,MRSH,2026-01-14,auto,"same-day span handoff, no Wikipedia row"
+BK,BNY,2026-05-21,hand,Bank of New York Mellon -> BNY
+SATS,ECHO,2026-06-24,auto,"same-day span handoff, no Wikipedia row"

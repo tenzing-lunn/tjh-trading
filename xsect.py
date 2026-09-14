@@ -68,16 +68,32 @@ def month_end_mask(index):
     return index.isin(last)
 
 
-def target_weights(panel, top_n=TOP_N, lookback=LOOKBACK, picker=None):
+def _eligible_at(row, eligible, t):
+    """Point-in-time universe filter. `eligible` is a boolean (dates x tickers) frame:
+    a name is selectable at month-end t only if eligible.loc[t, name] is True. Used by the
+    point-in-time S&P 500 panel (pit_panel.py) so a backtest can only pick names that were
+    ACTUALLY in the index on that date. When eligible is None this is never called and the
+    default behaviour is untouched."""
+    if t not in eligible.index:
+        return row.iloc[:0]
+    mask = eligible.loc[t].reindex(row.index).fillna(False).astype(bool)
+    return row[mask]
+
+
+def target_weights(panel, top_n=TOP_N, lookback=LOOKBACK, picker=None, eligible=None):
     """Daily target-weight DataFrame: at each month-end, long the top_n names by 12-1
     momentum (equal weight), hold until the next rebalance. `picker` overrides the
     selection (used by the random baseline); it gets (scores_row) -> list of names.
-    `lookback` is exposed only for the robustness sweep -- the canonical spec uses the default."""
+    `lookback` is exposed only for the robustness sweep -- the canonical spec uses the default.
+    `eligible` (optional, default None = every existing caller) restricts what is selectable
+    at each rebalance to a point-in-time universe; see _eligible_at."""
     scores = momentum_12_1(panel, lookback=lookback)
     rebal = month_end_mask(panel.index)
     w = pd.DataFrame(np.nan, index=panel.index, columns=panel.columns)
     for t in panel.index[rebal]:
         row = scores.loc[t].dropna()
+        if eligible is not None:
+            row = _eligible_at(row, eligible, t)
         if len(row) < top_n:            # not enough names with a full year of history yet
             continue
         names = picker(row) if picker else row.nlargest(top_n).index
@@ -112,14 +128,17 @@ def _pct(v):
     return f"{v * 100:8.1f}%" if v == v else '     nan'
 
 
-def _ew_weights(panel, lookback):
+def _ew_weights(panel, lookback, eligible=None):
     """Equal-weight ALL names that have a valid momentum score at each month-end -- the
-    'just own the universe' baseline for a given lookback (eligibility tracks the lookback)."""
+    'just own the universe' baseline for a given lookback (eligibility tracks the lookback).
+    `eligible` (optional, default None) narrows 'the universe' to the point-in-time members."""
     scores = momentum_12_1(panel, lookback=lookback)
     rebal = month_end_mask(panel.index)
     w = pd.DataFrame(np.nan, index=panel.index, columns=panel.columns)
     for t in panel.index[rebal]:
         row = scores.loc[t].dropna()
+        if eligible is not None:
+            row = _eligible_at(row, eligible, t)
         if len(row) < 1:
             continue
         wt = pd.Series(0.0, index=panel.columns)

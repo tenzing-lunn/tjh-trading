@@ -10,7 +10,17 @@ venv/
 # Comment a line out if you DO want to share that data with the team
 realdata/
 realdata_archive_97/
-research_data/
+# research_data/ is vendor data (Ken French extracts, Tiingo point-in-time prices) and stays
+# out -- EXCEPT the point-in-time S&P 500 membership table, which is built from MIT
+# (fja05680/sp500) + CC-BY-SA (Wikipedia) sources and is ours to commit. A blanket
+# `research_data/` ignore prunes the whole directory from git's traversal, so a bare
+# `!research_data/universe/membership.csv` would NOT work: each level has to be re-opened
+# first (`dir/*` + `!dir/subdir/`) before a file negation can bite.
+research_data/*
+!research_data/universe/
+research_data/universe/*
+!research_data/universe/membership.csv
+!research_data/universe/renames.csv
 *.kronos.csv
 spy.csv
 qqq.csv
