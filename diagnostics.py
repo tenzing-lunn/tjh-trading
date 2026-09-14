@@ -154,22 +154,38 @@ def active_deflated_sharpe(strat_df, bench_df, n_trials, trial_active_sharpes=No
 
 
 # ---- consistency: per-year, regime ------------------------------------------------------
-def per_year_returns(net_series, ppy=252):
-    """List of {period, return, sharpe, bars} per calendar year of the OOS net series."""
+def per_year_returns(net_series, ppy=252, bench=None):
+    """List of {period, return, sharpe, bars} per calendar year of the OOS net series.
+
+    `bench` (optional): the benchmark's per-bar net return. When given, each row also
+    carries `'active'` -- the year's return OVER the benchmark's own return on the same
+    bars. That is the series a one-year-wonder check must look at: raw return is mostly
+    beta spread across every year, so the flag stays silent even when the whole EDGE is
+    one year. Omitted entirely (not None) when `bench` is None, so existing callers see
+    exactly the old output."""
     rows = []
     for period, grp in net_series.groupby(net_series.index.to_period('Y')):
         v = grp.values
         sd = v.std(ddof=1) if len(v) > 1 else 0.0
-        rows.append({'period': str(period), 'return': float(np.prod(1 + v) - 1),
-                     'sharpe': float(v.mean() / sd * math.sqrt(ppy)) if sd > 0 else float('nan'),
-                     'bars': int(len(v))})
+        row = {'period': str(period), 'return': float(np.prod(1 + v) - 1),
+               'sharpe': float(v.mean() / sd * math.sqrt(ppy)) if sd > 0 else float('nan'),
+               'bars': int(len(v))}
+        if bench is not None:
+            b = bench.reindex(grp.index).dropna()
+            r_b = float(np.prod(1 + b.values) - 1) if len(b) else float('nan')
+            row['active'] = ((1 + row['return']) / (1 + r_b) - 1
+                             if r_b == r_b and r_b > -1 else float('nan'))
+        rows.append(row)
     return rows
 
 
-def _best_year_share(per_year):
-    """(best_year, share) where share = the single best year's fraction of total LOG return.
-    Log so compounding adds up. Returns (None, None) if the total is not positive."""
-    logs = [(p['period'], math.log(1 + p['return'])) for p in per_year if p['return'] > -1]
+def _best_year_share(per_year, key='return'):
+    """(best_year, share) where share = the single best year's fraction of the total LOG
+    return of `key` ('return' = raw, 'active' = over the benchmark). Log so compounding
+    adds up. Returns (None, None) if the total is not positive. A share >= 1 means every
+    other year, together, contributed nothing or worse."""
+    logs = [(p['period'], math.log(1 + p[key])) for p in per_year
+            if p.get(key) == p.get(key) and p.get(key, -2) > -1]
     total = sum(l for _, l in logs)
     if total <= 0 or not logs:
         return None, None
@@ -177,17 +193,37 @@ def _best_year_share(per_year):
     return yr, lg / total
 
 
-def regime_split(net_series, benchmark, lookback=60, band=0.02):
-    """Strategy net return in SPY up / down / chop regimes (tagged by trailing SPY trend)."""
+def regime_split(net_series, benchmark, bench_net=None, lookback=60, band=0.02):
+    """Strategy net return in SPY up / down / chop regimes (tagged by trailing SPY trend).
+
+    The tag is `shift(1)`ed: bar t is sorted by the trend that ENDED at t-1, never by a
+    window containing its own return.
+
+    `bench_net` (optional): the benchmark's per-bar net return. When given, each regime
+    cell also carries `'active'` -- the regime's return over the benchmark's return on the
+    same bars. A long-only book "wins in up, loses in down" by construction, so only the
+    active cell says anything about the edge."""
     spy = benchmark.reindex(net_series.index).ffill()
-    trend = spy.pct_change(lookback)
+    trend = spy.pct_change(lookback).shift(1)
     tag = pd.Series('chop', index=net_series.index)
     tag[trend > band] = 'up'
     tag[trend < -band] = 'down'
+    b = bench_net.reindex(net_series.index) if bench_net is not None else None
     out = {}
     for r in ('up', 'down', 'chop'):
-        v = net_series[tag == r].values
-        out[r] = {'return': float(np.prod(1 + v) - 1) if len(v) else 0.0, 'bars': int(len(v))}
+        sel = tag == r
+        v = net_series[sel].values
+        cell = {'return': float(np.prod(1 + v) - 1) if len(v) else 0.0, 'bars': int(len(v))}
+        if b is not None:
+            bb = b[sel].dropna()
+            if len(bb):
+                ss = net_series[sel].reindex(bb.index)
+                ret_s = float(np.prod(1 + ss.values) - 1)
+                ret_b = float(np.prod(1 + bb.values) - 1)
+                cell['active'] = (1 + ret_s) / (1 + ret_b) - 1 if ret_b > -1 else float('nan')
+            else:
+                cell['active'] = float('nan')
+        out[r] = cell
     return out
 
 
@@ -203,14 +239,36 @@ def red_flags(metrics, diag):
     if dsr is not None and dsr == dsr and dsr < 0.95:
         out.append(f"Best of {n} configs -- deflated Sharpe {dsr:.2f} (<0.95 => not "
                    f"distinguishable from luck).")
-    yr, share = diag.get('best_year'), diag.get('best_year_share')
-    if share is not None and share > 0.6:
-        out.append(f"{share*100:.0f}% of the return came from {yr} -- a one-year wonder.")
+    # One-year wonder. When a benchmark was supplied upstream the per-year rows carry
+    # 'active', and the question becomes "was the EDGE one year?" -- the raw version can
+    # only see beta, which is spread evenly across years and never trips.
+    per_year = diag.get('per_year') or []
+    if any('active' in p for p in per_year):
+        yr_a, share_a = _best_year_share(per_year, key='active')
+        if share_a is not None and share_a > 0.6:
+            out.append(f"{share_a*100:.0f}% of the edge over the benchmark came from {yr_a}.")
+        if share_a is not None and share_a >= 1.0:
+            out.append(f"Edge over the benchmark is fully explained by {yr_a}; "
+                       f"the other years net to <= 0.")
+    else:
+        yr, share = diag.get('best_year'), diag.get('best_year_share')
+        if share is not None and share > 0.6:
+            out.append(f"{share*100:.0f}% of the return came from {yr} -- a one-year wonder.")
     reg = diag.get('regime_split')
     if reg:
-        pos = [k for k, v in reg.items() if v['return'] > 0]
-        if len(pos) == 1:
-            out.append(f"Edge only shows in the '{pos[0]}' regime -- fragile, not robust.")
+        if any('active' in v for v in reg.values()):
+            neg = [k for k, v in reg.items()
+                   if v.get('active') == v.get('active') and v['active'] < 0]
+            pos = [k for k, v in reg.items()
+                   if v.get('active') == v.get('active') and v['active'] > 0]
+            if len(neg) >= 2:
+                out.append(f"Loses to the benchmark in {', '.join(neg)}; edge is one-regime.")
+            elif len(pos) == 1:
+                out.append(f"Edge over the benchmark shows only in '{pos[0]}'.")
+        else:
+            pos = [k for k, v in reg.items() if v['return'] > 0]
+            if len(pos) == 1:
+                out.append(f"Edge only shows in the '{pos[0]}' regime -- fragile, not robust.")
     return out
 
 
@@ -222,10 +280,14 @@ def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=2
 
     `bench_df` (optional): the benchmark's backtest output on the same index, under the same
     cost model (e.g. the ticker's own buy-and-hold walk-forward). When given, the dict also
-    carries `deflated_sharpe_active` -- the benchmark-relative number a gate should consume."""
+    carries `deflated_sharpe_active` -- the benchmark-relative number a gate should consume --
+    and the per-year / regime cells carry their ACTIVE counterparts, which is what switches
+    the one-year-wonder and regime red flags from "did it make money" to "did it beat the
+    benchmark". Without it every flag stays on raw return, exactly as before."""
     m = compute_metrics(oos, ppy)
     net = oos['net'].dropna()
-    per_year = per_year_returns(net, ppy)
+    bench_net = bench_df['net'] if bench_df is not None else None
+    per_year = per_year_returns(net, ppy, bench=bench_net)
     best_year, share = _best_year_share(per_year)
     diag = {
         'n_trials': n_trials,
@@ -235,7 +297,8 @@ def diagnose(oos, n_trials, benchmark=None, trial_sharpes=None, n_folds=5, ppy=2
         'per_year': per_year,
         'best_year': best_year,
         'best_year_share': share,
-        'regime_split': regime_split(net, benchmark) if benchmark is not None else None,
+        'regime_split': (regime_split(net, benchmark, bench_net=bench_net)
+                         if benchmark is not None else None),
     }
     if bench_df is not None:
         diag['deflated_sharpe_active'] = active_deflated_sharpe(

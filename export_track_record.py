@@ -90,9 +90,10 @@ def thesis_001_summary():
         panel, target_weights(panel, picker=lambda row: rng.choice(
             row.index, size=TOP_N, replace=False)))).reindex(window).dropna()
 
-    rob = robustness(res, spy_close_full)          # PSR + regime split + red flags
+    rob = robustness(res, spy_close_full, ew_res=ew_res)          # PSR + regime split + red flags
     sw = sweep(panel)                              # sensitivity neighborhood
-    n_beat = sum(s['beats_ew'] for s in sw)
+    n_beat = sum(s['beats_ew'] for s in sw)         # display only -- sign of a margin, not breadth
+    n_sig = sum(s['t_active'] >= 2 for s in sw)     # the honest count: monthly-active t >= 2
 
     m, m_ew = compute_metrics(res), compute_metrics(ew_res)
     m_rand = compute_metrics(rand_res)
@@ -108,7 +109,8 @@ def thesis_001_summary():
     # live Engine Room use, so the committed JSON cannot claim a verdict the engine rejects.
     sig = significance_vs_ew(res, ew_res, panel)
     pv = panel_verdict(m, m_ew, m_rand, spy_m, rob['flags'], sig)
-    status = (f'{pv["status"]} ({n_beat}/{len(sw)} sensitivity neighbors beat EW) '
+    status = (f'{pv["status"]} ({n_sig}/{len(sw)} sensitivity neighbors significant, t>=2; '
+              f'{n_beat}/{len(sw)} beat EW on raw return) '
               '— pending Jonathan sign-off + paper trading')
     return {
         'spec': f'12-1 cross-sectional momentum, monthly, top {TOP_N} of '
@@ -127,6 +129,7 @@ def thesis_001_summary():
         'red_flags': rob['flags'],
         'sweep': sw,
         'sweep_beats_ew': f'{n_beat}/{len(sw)}',
+        'sweep_significant': f'{n_sig}/{len(sw)}',
         'status': status,
         'caveats': ['universe is survivorship-biased (today\'s liquid names)',
                     'single history, no parameter search (nothing to overfit, '

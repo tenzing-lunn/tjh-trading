@@ -128,31 +128,73 @@ def _ew_weights(panel, lookback):
     return w.ffill().fillna(0.0)
 
 
-def robustness(res, spy_close):
+def robustness(res, spy_close, ew_res=None):
     """The scan's gauntlet applied to one panel result -> {psr, months, regimes, flags}.
     Shared by the CLI and the track-record export so both tell the SAME story. Probabilistic
     Sharpe is scored on MONTHLY returns (a monthly strategy: daily bars would count ~21
-    held-flat days as 21 independent wins and overstate significance)."""
-    monthly = res['net'].groupby([res.index.year, res.index.month]).apply(
-        lambda x: (1 + x).prod() - 1)
-    psr = deflated_sharpe_ratio(monthly.values, n_trials=1, ppy=12)   # n=1 => P(Sharpe > 0)
-    regimes = regime_split(res['net'], spy_close) if spy_close is not None else None
+    held-flat days as 21 independent wins and overstate significance).
+
+    `ew_res` (the EW-universe panel result) is what makes the gauntlet honest. Without it
+    every number here is measured against ZERO, and owning a rising basket passes: momentum,
+    the EW universe and five seeds of RANDOM top-10 picks all score PSR ~1.00 (audit 4.1).
+    With it, `psr` becomes the ACTIVE PSR -- P(the edge over the EW-universe is > 0) -- and
+    the one-year / regime flags read the active series too. `psr` is deliberately an ALIAS
+    for the honest number so every existing consumer gets it without changing; `psr_raw` and
+    `psr_active` are also returned for anyone who wants to see both."""
+    monthly = _monthly_returns(res['net'])
+    psr_raw = deflated_sharpe_ratio(monthly.values, n_trials=1, ppy=12)  # n=1 => P(Sharpe > 0)
+    psr_active = float('nan')
+    bench_net = None
+    if ew_res is not None:
+        bench_net = ew_res['net']
+        active = (monthly - _monthly_returns(bench_net)).dropna()
+        psr_active = deflated_sharpe_ratio(active.values, n_trials=1, ppy=12)
+    psr = psr_active if ew_res is not None else psr_raw
+    regimes = (regime_split(res['net'], spy_close, bench_net=bench_net)
+               if spy_close is not None else None)
     flags = []
     if psr == psr and psr < 0.95:
-        flags.append(f"Probabilistic Sharpe {psr:.2f} < 0.95 -- not clearly distinguishable from zero.")
-    yearly = [(y, (1 + g['net']).prod() - 1) for y, g in res.groupby(res.index.year)]
-    ylogs = [(y, np.log(1 + r)) for y, r in yearly if r > -1]
+        flags.append(f"Probabilistic Sharpe {psr:.2f} < 0.95 -- not clearly distinguishable from "
+                     + ("the EW-universe." if ew_res is not None else "zero."))
+    # The EDGE by year, not the return by year: raw return is mostly beta, spread across
+    # every year, so a one-year edge hides behind it (audit 3.1).
+    yearly = []
+    for y, g in res.groupby(res.index.year):
+        r = (1 + g['net']).prod() - 1
+        if bench_net is not None:
+            b = bench_net.reindex(g.index).dropna()
+            r_b = (1 + b).prod() - 1 if len(b) else float('nan')
+            r = (1 + r) / (1 + r_b) - 1 if r_b == r_b and r_b > -1 else float('nan')
+        yearly.append((y, float(r)))
+    ylogs = [(y, np.log(1 + r)) for y, r in yearly if r == r and r > -1]
     ytot = sum(l for _, l in ylogs)
+    what = 'edge over the EW-universe' if ew_res is not None else '(log) return'
     if ytot > 0 and ylogs:
         by, bl = max(ylogs, key=lambda t: t[1])
         if bl / ytot > 0.6:
-            flags.append(f"{bl/ytot*100:.0f}% of the (log) return came from {by} -- a one-year wonder.")
+            flags.append(f"{bl/ytot*100:.0f}% of the {what} came from {by} -- a one-year wonder.")
+        if bl / ytot >= 1.0:
+            flags.append(f"The {what} is fully explained by {by}; the other years net to <= 0.")
     if regimes:
-        worst = min(('up', 'down', 'chop'), key=lambda r: regimes[r]['return'])
-        if regimes[worst]['return'] < -0.05:     # materially loses money in some regime
-            flags.append(f"Loses in the '{worst}' regime ({_pct(regimes[worst]['return']).strip()}) "
-                         f"-- momentum leans on 'up' markets and whipsaws in chop, not all-weather.")
-    return {'psr': psr, 'months': int(len(monthly)), 'regimes': regimes, 'flags': flags}
+        if ew_res is not None:
+            neg = [r for r in ('up', 'down', 'chop')
+                   if regimes[r].get('active') == regimes[r].get('active')
+                   and regimes[r]['active'] < 0]
+            pos = [r for r in ('up', 'down', 'chop')
+                   if regimes[r].get('active') == regimes[r].get('active')
+                   and regimes[r]['active'] > 0]
+            if len(neg) >= 2:
+                flags.append(f"Loses to the EW-universe in {', '.join(neg)} regimes "
+                             f"-- the edge is one-regime, not all-weather.")
+            elif len(pos) == 1:
+                flags.append(f"Edge over the EW-universe shows only in the '{pos[0]}' regime.")
+        else:
+            worst = min(('up', 'down', 'chop'), key=lambda r: regimes[r]['return'])
+            if regimes[worst]['return'] < -0.05:     # materially loses money in some regime
+                flags.append(f"Loses in the '{worst}' regime ({_pct(regimes[worst]['return']).strip()}) "
+                             f"-- momentum leans on 'up' markets and whipsaws in chop, not all-weather.")
+    return {'psr': psr, 'psr_raw': psr_raw, 'psr_active': psr_active,
+            'months': int(len(monthly)), 'regimes': regimes, 'flags': flags}
 
 
 def _monthly_returns(net):
@@ -161,14 +203,39 @@ def _monthly_returns(net):
     return net.groupby([net.index.year, net.index.month]).apply(lambda x: (1 + x).prod() - 1)
 
 
+def _tstat(active):
+    """t-stat of the mean of a monthly active-return series (iid assumption)."""
+    n = len(active)
+    sd = active.std(ddof=1) if n > 1 else 0.0
+    return float(active.mean() / (sd / np.sqrt(n))) if sd > 0 else float('nan')
+
+
+def _nw_tstat(active, lag=3):
+    """Newey-West (HAC) t-stat of the same mean. Monthly active returns are autocorrelated
+    (momentum unwinds cluster around crashes), which the iid t-stat above ignores; this one
+    corrects the variance for it. Reported alongside, never instead of, the plain t."""
+    x = np.asarray(active, float)
+    n = len(x)
+    if n < 2:
+        return float('nan')
+    d = x - x.mean()
+    s = float(d @ d) / n
+    for l in range(1, min(lag, n - 1) + 1):
+        s += 2 * (1 - l / (lag + 1)) * float(d[l:] @ d[:-l]) / n
+    return float(x.mean() / np.sqrt(s / n)) if s > 0 else float('nan')
+
+
 def _panel_margin(sub_panel, cost_model=ETF_COST):
-    """Total-return margin of momentum over EW-universe on a given panel, aligned to a
-    common live window the same way main() does (EW reindexed to momentum's window)."""
+    """(total-return margin of momentum over EW-universe, monthly active series) on a given
+    panel, aligned to a common live window the same way main() does (EW reindexed to
+    momentum's window). The active series is what lets a leave-one-name-out run report a
+    t-stat rather than the sign of a margin."""
     mom = _first_active(run_panel(sub_panel, target_weights(sub_panel), cost_model))
     ew = _first_active(run_panel(sub_panel, _ew_weights(sub_panel, LOOKBACK), cost_model))
     ew = ew.reindex(mom.index).dropna()
     mom = mom.reindex(ew.index)
-    return compute_metrics(mom)['total_return'] - compute_metrics(ew)['total_return']
+    margin = compute_metrics(mom)['total_return'] - compute_metrics(ew)['total_return']
+    return margin, (_monthly_returns(mom['net']) - _monthly_returns(ew['net'])).dropna()
 
 
 def significance_vs_ew(res, ew_res, panel, cost_model=ETF_COST):
@@ -178,30 +245,34 @@ def significance_vs_ew(res, ew_res, panel, cost_model=ETF_COST):
       * t-stat of the mean monthly active return (need ~2+ to believe it),
       * a seeded 95% bootstrap CI on that mean (10k resamples),
       * % of months momentum beat the EW-universe,
+      * the same t with a Newey-West (HAC, lag 3) variance, since monthly active returns
+        are autocorrelated,
       * remove-top-contributor: drop each ticker in turn, recompute the margin, and find the
-        one name whose removal shrinks momentum's edge the most (does the edge survive it?)."""
+        one name whose removal shrinks momentum's edge the most -- reported as the t-stat
+        WITHOUT that name, not as 'still beats' (the sign of a margin is the very point
+        comparison this gate exists to replace)."""
     mom_m = _monthly_returns(res['net'])
     ew_m = _monthly_returns(ew_res['net'])
     active = (mom_m - ew_m).dropna()
     n = len(active)
-    sd = active.std(ddof=1)
-    t = active.mean() / (sd / np.sqrt(n)) if sd > 0 else float('nan')
+    t = _tstat(active)
     pct_won = float((active > 0).mean())
 
     rng = np.random.default_rng(0)
     boot_means = active.values[rng.integers(0, n, size=(10000, n))].mean(axis=1)
     ci_lo, ci_hi = np.percentile(boot_means, [2.5, 97.5])
 
-    full_margin = _panel_margin(panel, cost_model)
-    margins = {tk: _panel_margin(panel.drop(columns=tk), cost_model) for tk in panel.columns}
+    full_margin, _ = _panel_margin(panel, cost_model)
+    dropped = {tk: _panel_margin(panel.drop(columns=tk), cost_model) for tk in panel.columns}
     # Largest DROP in the edge = smallest margin once that name is gone.
-    top = min(margins, key=margins.get)
-    margin_wo = margins[top]
-    return {'t': float(t), 'n_months': int(n), 'pct_won': pct_won,
+    top = min(dropped, key=lambda tk: dropped[tk][0])
+    margin_wo, active_wo = dropped[top]
+    return {'t': float(t), 't_nw': _nw_tstat(active), 'n_months': int(n), 'pct_won': pct_won,
             'ci_lo': float(ci_lo), 'ci_hi': float(ci_hi),
             'active_mean': float(active.mean()),
             'top_contributor': top, 'full_margin': float(full_margin),
-            'margin_wo': float(margin_wo), 'still_beats': bool(margin_wo > 0)}
+            'margin_wo': float(margin_wo), 'still_beats': bool(margin_wo > 0),
+            't_wo': _tstat(active_wo)}
 
 
 def panel_verdict(m, m_ew, m_rand, spy_m, flags, sig):
@@ -239,7 +310,13 @@ def sweep(panel, cost_model=ETF_COST):
     """SENSITIVITY, not selection. Run the canonical spec's NEIGHBORS (lookback x top_n) and
     report the WHOLE neighborhood vs the EW-universe over each spec's own window. We do NOT
     pick the winner -- the pre-registered 12mo/top-10 stays the verdict (see main()). The only
-    question this answers: is the edge broad (robust) or a single knife-edge config (a fluke)?"""
+    question this answers: is the edge broad (robust) or a single knife-edge config (a fluke)?
+
+    Each neighbor reports the monthly-active t-stat against its OWN EW-universe, the same
+    statistic `significance_vs_ew` applies to the canonical spec. `beats_ew` (the sign of a
+    total-return margin) stays as a DISPLAY column only: "7/9 beat EW" is seven coin flips
+    landing heads by margins the size of noise, and reading it as breadth was exactly the
+    mistake audit 4.3 found."""
     out = []
     for lbl, lb in SWEEP_LOOKBACKS.items():
         ew_res = _first_active(run_panel(panel, _ew_weights(panel, lb), cost_model))
@@ -247,12 +324,19 @@ def sweep(panel, cost_model=ETF_COST):
             res = _first_active(run_panel(panel, target_weights(panel, top_n=tn, lookback=lb),
                                           cost_model))
             m = compute_metrics(res)
-            ewm = compute_metrics(ew_res.reindex(res.index).dropna())
+            ew_win = ew_res.reindex(res.index).dropna()
+            ewm = compute_metrics(ew_win)
+            active = (_monthly_returns(res['net']) - _monthly_returns(ew_win['net'])).dropna()
+            n = len(active)
+            sd = active.std(ddof=1) if n > 1 else 0.0
             out.append({
                 'lookback': lbl, 'top_n': tn,
                 'total_return': m['total_return'], 'cagr': m['cagr'],
                 'sharpe': m['sharpe'], 'max_dd': m['max_drawdown'],
                 'beats_ew': bool(m['total_return'] > ewm['total_return']),
+                't_active': float(active.mean() / (sd / np.sqrt(n))) if sd > 0 else float('nan'),
+                'pct_won': float((active > 0).mean()) if n else float('nan'),
+                'n_months': int(n),
                 'canonical': bool(lb == LOOKBACK and tn == TOP_N),
             })
     return out
@@ -353,15 +437,20 @@ def main():
     # ROBUSTNESS GAUNTLET -- the same skeptic's checks the single-name scan applies, so the
     # one surviving candidate is scrutinised BEFORE any human signs off on it (shared with the
     # track-record export via robustness()).
-    rob = robustness(res, spy_close_full)
+    rob = robustness(res, spy_close_full, ew_res=ew_res)
     regimes, flags = rob['regimes'], rob['flags']
     print("\nROBUSTNESS (same gauntlet as the scan):")
-    print(f"  Probabilistic Sharpe (monthly, {rob['months']} months): "
-          f"{rob['psr']:.2f}  (P the true Sharpe is > 0; >=0.95 = significant)")
+    print(f"  Probabilistic Sharpe (monthly ACTIVE vs EW-universe, {rob['months']} months): "
+          f"{rob['psr']:.2f}  (P the edge over EW is > 0; >=0.95 = significant)")
+    print(f"    [vs zero, for reference only: {rob['psr_raw']:.2f} -- owning any rising "
+          f"basket scores ~1.00, which is why it is not the gate]")
     if regimes:
-        print("  Net return by SPY regime (a long-only signal is expected to lean 'up'):")
+        print("  Net return by SPY regime (raw, then vs the EW-universe -- only the")
+        print("  active column says anything: a long-only book leans 'up' by construction):")
         for r in ('up', 'down', 'chop'):
-            print(f"    {r:4s}: {_pct(regimes[r]['return'])}  ({regimes[r]['bars']} bars)")
+            act = regimes[r].get('active')
+            print(f"    {r:4s}: {_pct(regimes[r]['return'])}   vs EW {_pct(act) if act is not None else '     n/a'}"
+                  f"  ({regimes[r]['bars']} bars)")
     if flags:
         print("  RED FLAGS:")
         for f in flags:
@@ -374,24 +463,32 @@ def main():
     sig = significance_vs_ew(res, ew_res, panel)
     print("\nSIGNIFICANCE VS EW-UNIVERSE (the missing gate):")
     print(f"  Monthly active return (momentum - EW), {sig['n_months']} months:")
-    print(f"    t-stat: {sig['t']:.2f}  (need ~2+ to believe the edge is real, not luck)")
+    print(f"    t-stat: {sig['t']:.2f}  (need ~2+ to believe the edge is real, not luck)"
+          f"   Newey-West (HAC, lag 3): {sig['t_nw']:.2f}")
     print(f"    mean active/mo: {sig['active_mean']*100:.2f}%   "
           f"95% bootstrap CI [{sig['ci_lo']*100:.2f}%, {sig['ci_hi']*100:.2f}%]")
     print(f"    months won: {sig['pct_won']*100:.0f}%  (coin-flip is 50%)")
     print(f"  Remove top contributor ({sig['top_contributor']}): "
-          f"margin {sig['full_margin']*100:.1f}% -> {sig['margin_wo']*100:.1f}%  "
-          f"(momentum {'still beats' if sig['still_beats'] else 'now LOSES to'} EW without it)")
+          f"t = {sig['t']:.2f} -> {sig['t_wo']:.2f} without it  "
+          f"(margin {sig['full_margin']*100:.1f}% -> {sig['margin_wo']*100:.1f}%)")
 
     # SENSITIVITY SWEEP -- neighbors of the canonical spec, to show it is not a knife-edge fluke.
     sw = sweep(panel)
     n_beat = sum(s['beats_ew'] for s in sw)
+    n_sig = sum(s['t_active'] >= 2 for s in sw)
+    best_t = max(s['t_active'] for s in sw)
     print("\nSENSITIVITY (neighbors of the canonical spec -- NOT selection; the pre-registered")
-    print(f"  12mo/top-10 stays the verdict). {n_beat}/{len(sw)} neighbor specs beat their EW-universe:")
-    print(f"    {'lookback':>8s} {'topN':>5s} {'total ret':>10s} {'Sharpe':>7s} {'beats EW':>9s}")
+    print(f"  12mo/top-10 stays the verdict). {n_sig}/{len(sw)} neighbours significant "
+          f"(t >= 2); best t = {best_t:.2f}.")
+    print(f"  ({n_beat}/{len(sw)} beat their EW-universe on total return -- display only: the")
+    print("   sign of a margin is a coin flip, not breadth.)")
+    print(f"    {'lookback':>8s} {'topN':>5s} {'total ret':>10s} {'Sharpe':>7s} "
+          f"{'t active':>8s} {'won':>5s} {'beats EW':>9s}")
     for s in sw:
         star = '  <= canonical' if s['canonical'] else ''
         print(f"    {s['lookback']:>8s} {s['top_n']:>5d} {_pct(s['total_return'])} "
-              f"{s['sharpe']:7.2f} {'YES' if s['beats_ew'] else 'no':>9s}{star}")
+              f"{s['sharpe']:7.2f} {s['t_active']:8.2f} {s['pct_won']*100:4.0f}% "
+              f"{'YES' if s['beats_ew'] else 'no':>9s}{star}")
 
     print("\nThe bar that matters:")
     pv = panel_verdict(m, m_ew, m_rand, spy_m, flags, sig)

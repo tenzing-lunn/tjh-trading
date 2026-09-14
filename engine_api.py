@@ -339,9 +339,10 @@ def run_momentum(force=False):
                          'momentum': float((1 + g['net']).prod() - 1),
                          'ew_universe': float((1 + ge['net']).prod() - 1) if len(ge) else None})
 
-    rob = robustness(res, spy_close_full)
+    rob = robustness(res, spy_close_full, ew_res=ew_res)
     sw = sweep(panel)
-    n_beat = sum(s['beats_ew'] for s in sw)
+    n_beat = sum(s['beats_ew'] for s in sw)         # display only -- sign of a margin, not breadth
+    n_sig = sum(s['t_active'] >= 2 for s in sw)     # the honest count: monthly-active t >= 2
 
     # The verdict is decided in exactly one place (xsect.panel_verdict), so the live Engine
     # Room cannot drift from the CLI's answer: raw bars AND the edge over the EW-universe
@@ -366,6 +367,7 @@ def run_momentum(force=False):
         'red_flags': rob['flags'],
         'sweep': sw,
         'sweep_beats_ew': f'{n_beat}/{len(sw)}',
+        'sweep_significant': f'{n_sig}/{len(sw)}',
         'verdict': pv,          # survives / status / beats_* / t_active / ci / pct_won
         'caveats': ["universe is survivorship-biased (today's liquid names) -- "
                     "'beats EW universe' is the honest bar, not the raw return",

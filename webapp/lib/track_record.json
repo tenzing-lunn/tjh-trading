@@ -9,8 +9,8 @@
    "tsmom"
   ],
   "edges": 0,
-  "suspects": 10,
-  "dead": 83,
+  "suspects": 3,
+  "dead": 90,
   "top": [
    {
     "ticker": "NVDA",
@@ -18,8 +18,8 @@
     "oos_return": 31.651718016270372,
     "sharpe": 1.374405411701599,
     "trades_per_fold": 1.2,
-    "dsr": 0.999135484636811,
-    "verdict": "dead",
+    "dsr": 0.0017551223338535538,
+    "verdict": "suspect",
     "red_flags": [
      "Only 1 trades/fold -- Sharpe may be luck, not skill."
     ]
@@ -30,8 +30,8 @@
     "oos_return": 28.85416238402599,
     "sharpe": 1.3555756332773048,
     "trades_per_fold": 9.0,
-    "dsr": 0.9996909420040238,
-    "verdict": "dead",
+    "dsr": 0.0010960814093865512,
+    "verdict": "suspect",
     "red_flags": [
      "Only 9 trades/fold -- Sharpe may be luck, not skill."
     ]
@@ -42,10 +42,11 @@
     "oos_return": 6.188083344435071,
     "sharpe": 1.1055063597953836,
     "trades_per_fold": 6.2,
-    "dsr": 0.9956864657972466,
+    "dsr": 4.464235289847185e-05,
     "verdict": "dead",
     "red_flags": [
-     "Only 6 trades/fold -- Sharpe may be luck, not skill."
+     "Only 6 trades/fold -- Sharpe may be luck, not skill.",
+     "Loses to the benchmark in up, chop; edge is one-regime."
     ]
    },
    {
@@ -54,11 +55,11 @@
     "oos_return": 6.0926742999802554,
     "sharpe": 0.9205854951102098,
     "trades_per_fold": 8.0,
-    "dsr": 0.9905951197732228,
-    "verdict": "dead",
+    "dsr": 3.820881329663628e-06,
+    "verdict": "suspect",
     "red_flags": [
      "Only 8 trades/fold -- Sharpe may be luck, not skill.",
-     "Edge only shows in the 'up' regime -- fragile, not robust."
+     "Loses to the benchmark in down, chop; edge is one-regime."
     ]
    },
    {
@@ -67,11 +68,11 @@
     "oos_return": 4.296095851884211,
     "sharpe": 0.8734753226500857,
     "trades_per_fold": 2.8,
-    "dsr": 0.9700754112244496,
+    "dsr": 1.3002510245607724e-05,
     "verdict": "dead",
     "red_flags": [
      "Only 3 trades/fold -- Sharpe may be luck, not skill.",
-     "Edge only shows in the 'up' regime -- fragile, not robust."
+     "Loses to the benchmark in down, chop; edge is one-regime."
     ]
    },
    {
@@ -80,10 +81,11 @@
     "oos_return": 4.273363253402888,
     "sharpe": 1.0037749248066545,
     "trades_per_fold": 3.8,
-    "dsr": 0.9875302275808961,
+    "dsr": 5.264658283599122e-06,
     "verdict": "dead",
     "red_flags": [
-     "Only 4 trades/fold -- Sharpe may be luck, not skill."
+     "Only 4 trades/fold -- Sharpe may be luck, not skill.",
+     "Loses to the benchmark in up, down; edge is one-regime."
     ]
    },
    {
@@ -92,10 +94,12 @@
     "oos_return": 3.3653309560874822,
     "sharpe": 0.8804741484579315,
     "trades_per_fold": 12.0,
-    "dsr": 0.977107668427805,
-    "verdict": "suspect",
+    "dsr": 0.010574814509628272,
+    "verdict": "dead",
     "red_flags": [
-     "Only 12 trades/fold -- Sharpe may be luck, not skill."
+     "Only 12 trades/fold -- Sharpe may be luck, not skill.",
+     "294% of the edge over the benchmark came from 2022.",
+     "Edge over the benchmark is fully explained by 2022; the other years net to <= 0."
     ]
    },
    {
@@ -104,11 +108,11 @@
     "oos_return": 2.742139503434489,
     "sharpe": 0.8423727661971153,
     "trades_per_fold": 7.6,
-    "dsr": 0.9580866578879095,
+    "dsr": 1.3077386326942886e-05,
     "verdict": "dead",
     "red_flags": [
      "Only 8 trades/fold -- Sharpe may be luck, not skill.",
-     "Edge only shows in the 'up' regime -- fragile, not robust."
+     "Loses to the benchmark in up, down; edge is one-regime."
     ]
    }
   ]
@@ -179,23 +183,29 @@
     "ew_universe": 0.055978028606026076
    }
   ],
-  "probabilistic_sharpe": 0.9992292425062277,
+  "probabilistic_sharpe": 0.6332765147044864,
   "regime_split": {
    "up": {
-    "return": 4.534172382880569,
-    "bars": 1172
+    "return": 1.1596941099482416,
+    "bars": 1171,
+    "active": -0.07792672879223783
    },
    "down": {
-    "return": -0.04663133375480988,
-    "bars": 331
+    "return": 0.7706702516079977,
+    "bars": 331,
+    "active": 0.16779200955515683
    },
    "chop": {
-    "return": -0.22404041410937403,
-    "bars": 236
+    "return": 0.0705888716269365,
+    "bars": 237,
+    "active": -0.011120819142173333
    }
   },
   "red_flags": [
-   "Loses in the 'chop' regime (-22.4%) -- momentum leans on 'up' markets and whipsaws in chop, not all-weather."
+   "Probabilistic Sharpe 0.63 < 0.95 -- not clearly distinguishable from the EW-universe.",
+   "156% of the edge over the EW-universe came from 2024 -- a one-year wonder.",
+   "The edge over the EW-universe is fully explained by 2024; the other years net to <= 0.",
+   "Loses to the EW-universe in up, chop regimes -- the edge is one-regime, not all-weather."
   ],
   "sweep": [
    {
@@ -206,6 +216,9 @@
     "sharpe": 1.0056867452139684,
     "max_dd": -0.30817642891550356,
     "beats_ew": true,
+    "t_active": 0.7161042873529696,
+    "pct_won": 0.5111111111111111,
+    "n_months": 90,
     "canonical": false
    },
    {
@@ -216,6 +229,9 @@
     "sharpe": 1.0353219395603515,
     "max_dd": -0.31525481863796856,
     "beats_ew": true,
+    "t_active": 0.3607410524269373,
+    "pct_won": 0.5,
+    "n_months": 90,
     "canonical": false
    },
    {
@@ -226,6 +242,9 @@
     "sharpe": 1.0615123945548757,
     "max_dd": -0.32080159811216924,
     "beats_ew": false,
+    "t_active": -0.0010295571074947364,
+    "pct_won": 0.5,
+    "n_months": 90,
     "canonical": false
    },
    {
@@ -236,6 +255,9 @@
     "sharpe": 0.9446884961360956,
     "max_dd": -0.33521137500763987,
     "beats_ew": true,
+    "t_active": 0.7765216605572887,
+    "pct_won": 0.5632183908045977,
+    "n_months": 87,
     "canonical": false
    },
    {
@@ -246,6 +268,9 @@
     "sharpe": 1.0136191614858792,
     "max_dd": -0.3153187982877562,
     "beats_ew": true,
+    "t_active": 0.5574331264449914,
+    "pct_won": 0.4942528735632184,
+    "n_months": 87,
     "canonical": false
    },
    {
@@ -256,6 +281,9 @@
     "sharpe": 0.9993143942350222,
     "max_dd": -0.3220632335411532,
     "beats_ew": false,
+    "t_active": -0.04888585242959424,
+    "pct_won": 0.47126436781609193,
+    "n_months": 87,
     "canonical": false
    },
    {
@@ -266,6 +294,9 @@
     "sharpe": 1.0443324402815115,
     "max_dd": -0.2920939872537751,
     "beats_ew": true,
+    "t_active": 1.1805804361003893,
+    "pct_won": 0.5238095238095238,
+    "n_months": 84,
     "canonical": false
    },
    {
@@ -276,6 +307,9 @@
     "sharpe": 0.9900731193089902,
     "max_dd": -0.3027593248790874,
     "beats_ew": true,
+    "t_active": 0.3435567186472336,
+    "pct_won": 0.47619047619047616,
+    "n_months": 84,
     "canonical": true
    },
    {
@@ -286,11 +320,15 @@
     "sharpe": 1.086635050532788,
     "max_dd": -0.3164371004751877,
     "beats_ew": true,
+    "t_active": 0.5740674433799711,
+    "pct_won": 0.5357142857142857,
+    "n_months": 84,
     "canonical": false
    }
   ],
   "sweep_beats_ew": "7/9",
-  "status": "UNPROVEN -- clears the raw return bars, but the edge over EW-universe is not statistically distinguishable from luck (t=0.34, need ~2+); also 1 robustness flag(s) above. (7/9 sensitivity neighbors beat EW) \u2014 pending Jonathan sign-off + paper trading",
+  "sweep_significant": "0/9",
+  "status": "UNPROVEN -- clears the raw return bars, but the edge over EW-universe is not statistically distinguishable from luck (t=0.34, need ~2+); also 4 robustness flag(s) above. (0/9 sensitivity neighbors significant, t>=2; 7/9 beat EW on raw return) \u2014 pending Jonathan sign-off + paper trading",
   "caveats": [
    "universe is survivorship-biased (today's liquid names)",
    "single history, no parameter search (nothing to overfit, but only one draw)",
@@ -298,7 +336,7 @@
   ]
  },
  "verdict_log": {
-  "n_real": 13,
+  "n_real": 15,
   "n_synthetic": 2
  }
 }

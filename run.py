@@ -11,7 +11,7 @@ import pandas as pd
 from data import synthetic_ohlcv, load_csv
 from costs import CostModel
 from backtest import run_backtest
-from metrics import compute_metrics
+from metrics import compute_metrics, active_metrics
 from strategies import (buy_and_hold, random_strategy, sma_crossover,
                         mean_reversion, kronos_signal)
 from walkforward import walk_forward
@@ -46,7 +46,15 @@ def log_wf_verdict(strategy, px, combined, chosen, grid, trial_sharpes, m, path)
         s = spy.loc[lo:hi]
         if len(s) > 1:
             spy_ret, bench = float(s.iloc[-1] / s.iloc[0] - 1), spy
-    d = diagnose(combined, len(grid), benchmark=bench, trial_sharpes=trial_sharpes)
+    # The benchmark a gate may consume: the ticker's own buy&hold walked through the SAME
+    # folds and cost model (scan.py's pattern), NOT the raw price ratio. `beats_bh` on its
+    # own is a point comparison -- 0.1% ahead over five years prints as a clean BEAT -- so
+    # the record also carries the ACTIVE t-stat and the benchmark-relative deflated Sharpe.
+    bh_comb, _ = walk_forward(px, lambda p: (lambda prices: buy_and_hold(prices)),
+                              [{}], CostModel(3, 1), n_folds=5)
+    d = diagnose(combined, len(grid), benchmark=bench, trial_sharpes=trial_sharpes,
+                 bench_df=bh_comb)
+    am = active_metrics(combined, bh_comb)
     append_verdict({
         'ticker': os.path.splitext(os.path.basename(path))[0] if path else 'synthetic',
         'strategy': strategy, 'params': chosen,
@@ -55,6 +63,7 @@ def log_wf_verdict(strategy, px, combined, chosen, grid, trial_sharpes, m, path)
         'oos_max_dd': m['max_drawdown'], 'num_trades': m['num_trades'],
         'buy_hold_return': bh, 'spy_return': spy_ret,
         'beats_bh': bool(m['total_return'] > bh),
+        'active_t_vs_bh': am['t_stat'], 'active_dsr_vs_bh': d['deflated_sharpe_active'],
         'deflated_sharpe': d['deflated_sharpe'], 'trades_per_fold': d['trades_per_fold'],
         'per_year': d['per_year'], 'regime_split': d['regime_split'],
         'red_flags': d['red_flags'],

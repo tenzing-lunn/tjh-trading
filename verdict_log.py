@@ -72,6 +72,19 @@ def _pct(v):
     return f"{v * 100:+.1f}%" if isinstance(v, (int, float)) and v == v else "--"
 
 
+def _vs_bh(r):
+    """The 'vs B&H' cell: the SIZE and the ERROR BAR of the margin, never the bare word
+    BEAT. A strategy 0.1% ahead of buy&hold over five years is not a win, and the old cell
+    printed it identically to one that doubled the benchmark. Falls back to the old word for
+    records logged before `active_t_vs_bh` existed (the log mixes old and new on disk)."""
+    t = r.get("active_t_vs_bh")
+    oos, bh = r.get("oos_total_return"), r.get("buy_hold_return")
+    if t is None or t != t or oos is None or bh is None:
+        return "BEAT" if r.get("beats_bh") else "lost"
+    margin = oos - bh
+    return f"{'+' if margin >= 0 else '-'}{abs(margin):.1%} (t={t:.1f})"
+
+
 def render_markdown(records):
     """Markdown table of real (non-synthetic) records, newest first. Judgment is
     deliberately blank: that column belongs to Henry, never the machine."""
@@ -91,12 +104,13 @@ def render_markdown(records):
            "|------|----------|------|-------------|---------|-----------|--------|--------|-------|------------------|"]
     for r in rows:
         flags = r.get("red_flags") or []
+        bh = _vs_bh(r)
         out.append("| {d} | {s} | {t} | {c} | {oos} | {sh} | {bh} | {spy} | {fl} | |".format(
             d=str(r.get("timestamp", ""))[:10], s=r.get("strategy", "?"),
             t=r.get("ticker", "?"), c=r.get("cost_regime", "?"),
             oos=_pct(r.get("oos_total_return")),
             sh=f"{r['oos_sharpe']:.2f}" if r.get("oos_sharpe") == r.get("oos_sharpe") else "--",
-            bh="BEAT" if r.get("beats_bh") else "lost",
+            bh=bh,
             spy=_pct(r.get("spy_return")),
             fl=f"{len(flags)} flag(s)" if flags else "none"))
     return "\n".join(out)
