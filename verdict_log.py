@@ -54,6 +54,14 @@ def scan_row_to_record(row, cost_regime="3/1 bps (liquid ETF)"):
         "oos_max_dd": m["max_drawdown"], "num_trades": m["num_trades"],
         "buy_hold_return": row["bh_return"], "spy_return": row["spy_return"],
         "beats_bh": bool(row["beats_bh"]),
+        # What actually gated the verdict: significance of the ACTIVE return (strategy net
+        # minus benchmark net) against both benchmarks, the scan-wide best-of-N discount, and
+        # the percentile against holding-period-matched random schedules.
+        "active_return_vs_bh": row["active_return_vs_bh"],
+        "dsr_vs_bh": row["dsr_vs_bh"], "dsr_vs_spy": row["dsr_vs_spy"],
+        "dsr_scan": row["dsr_scan"], "rand_pct": row["rand_pct"],
+        # Legacy field, kept so old records stay comparable: the binding (weakest) of the
+        # three active DSR legs above. NOT the old raw vs-zero number, which pure beta passed.
         "deflated_sharpe": row["dsr"], "trades_per_fold": row["trades_per_fold"],
         "red_flags": row["red_flags"], "clean": bool(row["clean"]),
         "synthetic": False,
