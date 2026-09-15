@@ -8,6 +8,22 @@ When a decision changes, add a NEW entry that supersedes the old one (don't dele
 
 ---
 
+### 2026-09-15 — Data admission and spread sampling implemented
+**Implementation decisions under plan/14:** intraday admission uses exchange-calendar
+symbol-days and SHA-256-bound quality reports; daily CSV admission validates at load.
+Minute sessions stay separate so exclusions cannot silently compress trading time.
+For I1.4, the initial one-second samples left 5,250 no-update observations. A fixed
+60-second backward lookup, clamped to the same bucket, recovered missing quotes at
+unchanged sample timestamps. Existing valid/locked/crossed observations were retained.
+Final coverage is 21,094/21,120 valid. This changes measurement completeness, not a
+strategy selection rule; no new strategy variants were tested. Validation reruns used
+`LEDGER_DISABLE=1` and left both ledgers unchanged.
+**Finding:** SPY midday half-spread is 0.170 bps, below the rough planning estimate.
+Keep the measurements; do not force them to match an expectation. These are quotes,
+not fills. Existing cost constants remain unchanged; Tenzing still owns I1.5 sign-off.
+**Who:** Codex, implementing Tenzing's instruction to continue the approved plan.
+**Evidence:** [[research/audits/intraday-data]], [[Costs]], [[plan/14-intraday-plan]].
+
 ### 2026-09-14 — Jonathan and Henry are no longer part of this project; Tenzing runs it with Claude subagents
 **Decision:** Jonathan and Henry are subtracted from the idea of the project — they never
 produced theses, so their work is not being run. This is now Tenzing's project, run with

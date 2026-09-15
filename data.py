@@ -43,7 +43,18 @@ def load_csv(path, warn=True):
                 print(f"[data] {path}: trimmed {first} leading pre-IPO/zero-volume rows "
                       f"({df.index[0].date()} -> {df.index[first].date()})")
             df = df.iloc[first:]
+    # Keep admission at the file boundary: every CSV used by scan/xsect/run is
+    # checked, including files fetched by the API. Synthetic fixtures never use
+    # this path and retain the core's dependency-light behavior.
+    from dq import validate_daily
+    validate_daily(df)
     return df
+
+
+def load_intraday(symbol, start=None, end=None, root='intraday'):
+    """Load certified minute data as separate sessions; never bridge excluded days."""
+    from dq import load_intraday as checked_sessions
+    return checked_sessions(symbol, start=start, end=end, root=root)
 
 
 def quality_report(path):

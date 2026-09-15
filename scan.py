@@ -23,7 +23,7 @@ Honesty rails baked in (rewritten 2026-09-14, audit 2026-09-gates.md 2.5 / plan-
               HUMAN: the len(rows) results of this scan. (The grid N is still printed in the N
               column to document the search -- but the walk-forward OOS series has no in-sample
               selection bias on the grid axis, so charging it there was a category error.)
-  * Gate 4 -- trades/fold is shown and flagged when < 30 (too few trades = luck, not edge), and
+  * Gate 4 -- trades/fold is descriptive; the power verdict must not FAIL, and
               the random bar is a PERCENTILE over N_RANDOM holding-period-matched coin flips,
               not one seed of a bar-by-bar coin flip that bleeds costs and loses to everything.
 
@@ -248,7 +248,7 @@ def _pct(v, width=7):
 
 def _verdict(r):
     # 'EDGE?' = the edge over BOTH benchmarks survived the discount, and it is positive,
-    # non-thin and better than 95% of holding-period-matched coin flips.
+    # not ruled out by the power check and better than 95% of matched coin flips.
     # 'suspect' = significant against one benchmark leg only -- a prompt to look, not a pass.
     # 'dead' is the legacy name for "neither of the above" -- kept for callers that still
     # read this 3-way value (engine_api.py, export_track_record.py). For display, see

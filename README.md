@@ -15,10 +15,33 @@ means the machine isn't flattering us.
 > An idea is only "real" if it beats the dumb options (just buy the stock and hold it, or
 > trade at random) **on data it wasn't tuned on, after paying costs.**
 
+## Current work: intraday data foundation
+
+The active plan is [plan/14-intraday-plan.md](plan/14-intraday-plan.md). The minute
+cache covers 32 symbols from 2016; calendar checks exclude 98 bad symbol-days.
+Measured quote spreads are in [Costs.md](Costs.md). Session-aware execution,
+feed-delay enforcement, and the signed intraday cost regime are still required.
+
+Use the project's virtual environment for data work:
+
+```bash
+python3 -m venv --system-site-packages .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python audit_intraday.py  # local cache inventory
+.venv/bin/python dq.py             # certify minute files; check daily CSVs
+.venv/bin/python spreads.py        # summarize an existing completed quote cache
+```
+
+On a fresh cache, `spreads.py --fetch` freezes and fetches the quote sample plan;
+`spreads.py --backfill` resolves missing snapshots at unchanged timestamps.
+Run one Alpaca collector at a time. Daily CSV admission now rejects malformed
+files; `data.load_intraday` returns separate, certified sessions. See the
+[data audit](research/audits/intraday-data.md) for reproduction and limitations.
+
 ## What we found so far (the short version)
 | What we tested | Result |
 |---|---|
-| 3 classic single-stock strategies (below), tried on 31 stocks = 93 tests | **0 passed.** 10 looked promising at first, but each one failed a closer check. 83 failed outright. |
+| 3 classic single-stock strategies (below), tried on 31 stocks = 93 tests | **0 edges, 3 suspects, 76 FAIL, 14 INCONCLUSIVE** (2026-09-14 rerun). |
 | The same thing earlier on ~100 stocks = 309 tests | **0 passed.** So the "nothing works" result wasn't about which stocks we picked. |
 | **Thesis 001: momentum.** Every month, buy the 10 stocks that rose the most over the past year | **Looked like it passed, but a closer check (Sept 2026) says unproven.** **+309%** vs +285% for owning all 30 equally and +180% for holding SPY (2019–2026, after costs). But its lead over "own all 30" is too small to tell apart from luck. The t-stat is 0.34, where ~2 is needed, and it won only 48% of months. Remove NVDA and the lead disappears. It also loses money in sideways, choppy markets. Not traded with real money. |
 

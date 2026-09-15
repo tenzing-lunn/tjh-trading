@@ -93,6 +93,8 @@ affected file — and Claude updates its cloud memory so the next session starts
 Stale plan = dead plan.
 
 ## ▶️ Current focus
-Building a **deployed equity/backtest visualizer web app** powered by the canonical Python
-harness, with the larger quant-system ideas captured but deferred. See
-[[plan/06-engineering-plan]] and [[plan/03-roadmap]] → Now.
+Short-term intraday/swing research under [[plan/14-intraday-plan]]. Updated 2026-09-15:
+Phase 0, the minute fetcher, data-quality admission and spread measurements are complete.
+Next is the I1.5 execution-cost proposal (Tenzing signs constants), followed by the
+session/delay engine and independent audit. The current daily scan still has zero edges;
+Thesis 001 remains INCONCLUSIVE and parked. See [[plan/03-roadmap]].

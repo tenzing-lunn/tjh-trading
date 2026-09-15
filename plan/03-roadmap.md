@@ -1,58 +1,38 @@
 # 03 — Roadmap (Now / Next / Later)
 
-Home: [[PROJECT_PLAN]] · Status: [[plan/09-status-where-we-are]] (the up-to-date pipeline tracker)
+Home: [[PROJECT_PLAN]] · Active implementation plan: [[plan/14-intraday-plan]]
 
-*No dates — we move as fast as we can. This is about order and dependency, not calendar.
-Move items up as they're done; add freely. Last refreshed 2026-07-06 against [[plan/09-status-where-we-are]]
-and [[plan/01-decision-log]] — the machine track (web app, wide scan, Thesis 001 engine) is
-DONE; what's actually "Now" is the human sign-offs, not more code.*
+Updated 2026-09-15. The short-term intraday/swing plan supersedes the older
+monthly-momentum-to-paper sequence. Thesis 001 is INCONCLUSIVE and parked.
 
-## ▶️ Now
-- **2026-09-13 — supersedes the sign-off items below:** Thesis 001's edge over EW-universe
-  failed a significance check (t = 0.34). Work now follows [[plan/12-real-markets-plan]]. First
-  parallel batch: P0.1 add the vs-EW gate (Opus), P0.2 audit the other gates (Fable), P1.1
-  fetch Ken French momentum data (Haiku), P1.3 design a no-hindsight universe (Fable).
-  Tenzing: review the **G1 criteria** in plan/12 *before* the results come in.
+## Now
 
-*The engineering track (web app v1, wide scan, cross-sectional panel engine) is built, run,
-and deployed. The bottleneck has moved from code to people — see [[plan/09-status-where-we-are]]
-"the one thing blocking everything."*
+- Phase 0 is complete: three-way evidence gate, frequency-aware annualization,
+  and removal of the hard trades-per-fold verdict rule.
+- Data foundation: adjusted SIP minute fetcher merged; all 32 symbols inspected.
+  The quality gate excludes 98 bad symbol-days and preserves early closes.
+  Daily CSVs validate on load; minute loads require matching quality reports.
+- Spread measurements are complete: 21,094 valid snapshots; full tables and
+  limitations in [[Costs]] and [[research/audits/intraday-data]].
+- **Next implementation task: I1.5**, an intraday execution-cost regime using
+  measured spreads, stated slippage/participation assumptions and sell-side fees.
+  Prepare a concrete proposal; **Tenzing signs constants before adoption**.
+  Existing daily and options regimes remain unchanged.
 
-- **Tenzing:** (1) SIGN Thesis 001 (`research/theses/001-cross-sectional-momentum.md`) — it's
-  pre-filled with the run and a surviving verdict attached; own or amend the economic story,
-  then pre-register whether to advance it to paper. **Not yet done — first log entry
-  still outstanding** ([[roles/log-Tenzing]]). (2) build the real cost table (bps per
-  instrument, from actual Alpaca/market numbers) and ratify the **slimmed 30-name universe**
-  (`fetch_universe.py`, cut from ~97 on 2026-07-06 — quality over quantity; old list archived,
-  not gone, in `realdata_archive_97/`) — `costs.py`'s 3/1 and 300/50 bps regimes are still
-  placeholders, not the ratified numbers yet; (3) render a judgment (real vs.
-  survivorship-inflated) on Thesis 001's verdict, now checked on **two** universes (see
-  [[plan/02-verdict-log]] 2026-07-06). (4) ~~generate real Alpaca paper API keys and fill `.env`~~ **DONE** — `.env`
-  has live Alpaca paper keys, account verified ACTIVE (2026-07-10, $100k equity/$400k buying
-  power); (5) ~~wire `scan.py`/`xsect.py` results into `verdict_log.py`'s auto-logger~~
-  **DONE (2026-07-11)** — `scan.py --log` records edges + gate-2 suspects, `xsect.py --log`
-  records the Thesis-001 panel verdict; `verdict_log.render_markdown` dedups per
-  (ticker, strategy, run, cost_regime) so re-runs refresh instead of stacking. Refresh the
-  human log with `python3 verdict_log.py --write-md plan/02-verdict-log.md`; (6) ~~add the
-  panel-⑤ robustness/red-flag view (`diagnostics.py` output) to the per-ticker web app view~~
-  **DONE (2026-07-11)** — `export_results.build` now attaches `diagnostics` (deflated Sharpe,
-  per-year, regime split, red flags) to each walk-forward entry, and `webapp/app/page.tsx`
-  renders a `⑤ Robustness` card in the per-ticker view. Verified live (SPY/meanrev: DSR 0.60,
-  one red flag).
+## Next
 
-## ⏭️ Next
-- Once signed off: paper-trade Thesis 001 via `alpaca_paper.py` for 2+ weeks;
-  keep a trade journal (thesis, entry, exit, expected vs actual cost).
-- Make the deployed app interview-strong: README, architecture notes, demo flow.
-- Add the **options modeling layer** to the app only as an approximate teaching overlay; see
-  [[webapp/options-modeling]].
-- Fill the missing Obsidian notes ([[Strategies]], [[Metrics]], [[Data]], [[Walkforward]] —
-  still unresolved wikilinks).
+- Phase 2: session/overnight accounting, the 15-minute feed delay in the engine,
+  calendar walk-forward folds, stress tests, sanity checks, independent audit.
+  Checked minute data is not evidence that the daily engine already handles this.
+- I1.7 independent vendor cross-check remains open. Databento's signup credit is
+  Tenzing's to claim; no paid data or account creation without his authorization.
+- Pre-register a small set of short-term theses only after the engine audit.
+  Every go/no-go gate remains Tenzing's; no order commands.
 
-## 🔮 Later
-- Intraday Kronos (data swap) — parked; revisit only if we deliberately go intraday.
-- Wire Supabase to **record live option chains daily** — the honest path to future options
-  backtests.
-- Finetune Kronos *only if* zero-shot shows OOS edge (still not run for real — parked per
-  [[plan/01-decision-log]] 2026-07-02, daily-bar timeframe mismatch).
-- Fordham research-club build-out ([[plan/00-vision]]).
+## Later
+
+- Replay → shadow → paper, with a separate risk gate and kill switch.
+- Intraday Kronos zero-shot under the audited delay/cost pipeline; finetuning
+  only if zero-shot survives. See [[plan/14-intraday-plan]].
+- Web-app presentation, architecture/demo documentation, and missing Obsidian notes.
+- Educational options modeling remains paper-only; no outside capital.
