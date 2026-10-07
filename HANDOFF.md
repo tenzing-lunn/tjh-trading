@@ -1,5 +1,12 @@
 # Codex handoff — 2026-09-15
 
+**Active multi-agent continuation:** Tenzing now explicitly requires specialized
+model routing and a separate orchestrator-verifier; see `plan/16-agent-routing.md`.
+Independent review reopened two I1.2 checks (long-gap refusal and daily absurd
+jumps). A separate core engineer is correcting them; another is drafting I1.5.
+The completed-work summary below describes the prior checkpoint, not acceptance
+of these pending corrections or unsigned cost constants.
+
 Read `AGENTS.md`, `CLAUDE.md`, and `plan/14-intraday-plan.md`. The `.py` files are
 canonical for engine logic; plan/14 is canonical for direction. Tenzing owns all
 gates. Scope is intraday plus swing; monthly Thesis 001 remains INCONCLUSIVE and
@@ -91,9 +98,13 @@ LEDGER_DISABLE=1 .venv/bin/python scan.py
 - Keys stay in ignored `.env`; never print, log, copy or commit them.
 - Free by default; paid services require Tenzing's sign-off and the standing
   ~20x justification. No orders, including paper orders, from agents.
-- Use `LEDGER_DISABLE=1` for scan/run/xsect validation. `test_ledger.py` uses
-  temporary ledgers and must run **without** that flag. Do not discard unrelated
-  ledger edits to hide test pollution; inspect changes before committing.
+- Use `LEDGER_DISABLE=1` to suppress experiment writes during validation.
+  **It does not suppress `run.py` verdict writes:** mock/redirect `append_verdict`
+  to a temporary file when validating that CLI. Plain `scan.py` without `--log`
+  does not write verdicts. `test_ledger.py` uses temporary ledgers and must run
+  **without** the flag. Do not discard unrelated ledger edits to hide test pollution.
+  On 2026-09-16 one synthetic CLI validation row was moved to `/private/tmp` only
+  after confirming the remaining bytes exactly matched the pre-run ledger hash.
 - Check branch bases before worktree work. Co-authored commits include a trailer.
 
 ## Worktrees

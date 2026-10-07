@@ -2,7 +2,7 @@
 
 Home: [[PROJECT_PLAN]] · Active implementation plan: [[plan/14-intraday-plan]]
 
-Updated 2026-09-15. The short-term intraday/swing plan supersedes the older
+Updated 2026-09-16. The short-term intraday/swing plan supersedes the older
 monthly-momentum-to-paper sequence. Thesis 001 is INCONCLUSIVE and parked.
 
 ## Now
@@ -12,6 +12,9 @@ monthly-momentum-to-paper sequence. Thesis 001 is INCONCLUSIVE and parked.
 - Data foundation: adjusted SIP minute fetcher merged; all 32 symbols inspected.
   The quality gate excludes 98 bad symbol-days and preserves early closes.
   Daily CSVs validate on load; minute loads require matching quality reports.
+  Independent review closed long-gap refusal and daily-jump screening fixes,
+  including the exact-60% numeric boundary. See
+  [[research/audits/2026-09-16-data-fix-verification]].
 - Spread measurements are complete: 21,094 valid snapshots; full tables and
   limitations in [[Costs]] and [[research/audits/intraday-data]].
 - **Next implementation task: I1.5**, an intraday execution-cost regime using

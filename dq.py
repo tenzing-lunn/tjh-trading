@@ -17,6 +17,8 @@ import pandas as pd
 VERSION = 1
 MIN_COVERAGE = .60
 MAX_MINUTE_RETURN = .20
+MAX_DAILY_RETURN = .60
+MAX_MISSING_SESSION_RUN = 3
 
 
 class QualityError(ValueError):
@@ -73,6 +75,17 @@ def validate_daily(df, expected_start=None):
         raise QualityError('Intraday CSVs require the checked session loader')
     if invalid_ohlcv(df).any():
         raise QualityError('Invalid OHLCV or interior zero-volume bars')
+    closes = df['close'].astype(float).to_numpy()
+    previous, current = closes[:-1], closes[1:]
+    with np.errstate(over='ignore', divide='ignore', invalid='ignore'):
+        daily_returns = current / previous - 1
+    # Division can round an exact 60% rise one ULP above 0.60 (for example,
+    # 160 / 100 - 1). Admit that single representational step, while still
+    # rejecting the next distinct float and all clearly larger moves.
+    return_boundary = np.nextafter(MAX_DAILY_RETURN, np.inf)
+    excessive_moves = np.abs(daily_returns) > return_boundary
+    if (~np.isfinite(daily_returns) | excessive_moves).any():
+        raise QualityError('Non-finite or greater than 60% close-to-close daily return')
     dates = idx.strftime('%Y-%m-%d')
     start = expected_start or dates[0]
     sessions = schedule(str(start), dates[-1])
@@ -80,8 +93,25 @@ def validate_daily(df, expected_start=None):
         raise QualityError('History starts after the declared start')
     if not set(dates).issubset(sessions.index):
         raise QualityError('Daily bars on non-trading dates')
-    if longest_run(~sessions.index.isin(dates)) > 3:
+    if longest_run(~sessions.index.isin(dates)) > MAX_MISSING_SESSION_RUN:
         raise QualityError('More than three missing trading sessions')
+
+
+def report_missing_session_run(report):
+    """Read the symbol-level gap result, including pre-fix certificates."""
+    recorded = report.get('longest_missing_session_run')
+    if recorded is not None:
+        return int(recorded)
+    return longest_run(r.get('observed', 0) == 0 for r in report.get('sessions', []))
+
+
+def refuse_long_session_gap(report):
+    missing_run = report_missing_session_run(report)
+    if missing_run > MAX_MISSING_SESSION_RUN:
+        raise QualityError(
+            f'More than three consecutive missing trading sessions ({missing_run}); '
+            'entire symbol excluded'
+        )
 
 
 def inspect_sessions(df, sessions):
@@ -156,6 +186,10 @@ def inspect_symbol(symbol, root=Path('intraday')):
               'min_coverage': MIN_COVERAGE, 'max_minute_return': MAX_MINUTE_RETURN,
               'start_late': first_observed != sessions.index[0],
               'longest_missing_session_run': longest_run(missing), 'sessions': rows}
+    # Sparse or corrupt individual sessions remain listed as EXCLUDE above. A long
+    # run is a symbol-level provenance failure, so it must not produce an admitting
+    # certificate that lets later sessions bridge an unexplained hole.
+    refuse_long_session_gap(report)
     target = root / '_quality' / f'{symbol}.json'
     target.parent.mkdir(exist_ok=True)
     tmp = target.with_suffix('.tmp')
@@ -179,6 +213,7 @@ def load_intraday(symbol, start=None, end=None, root=Path('intraday')):
         raise QualityError('Stale quality certificate; rerun dq.py')
     if report['start_late']:
         raise QualityError('History begins after the declared vendor start')
+    refuse_long_session_gap(report)
     paths = sorted((root / symbol).glob('*.parquet'))
     if {p.name for p in paths} != set(report['files']):
         raise QualityError('Minute file set changed after inspection')

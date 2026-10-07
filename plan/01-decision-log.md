@@ -8,6 +8,21 @@ When a decision changes, add a NEW entry that supersedes the old one (don't dele
 
 ---
 
+### 2026-09-15 — Specialized implementers and an independent orchestrator-verifier
+**Instruction:** Tenzing requires following the plan's division of work by model,
+with an orchestrator-verifier agent. Direct implementation followed only by the
+same assistant's checks does not satisfy this workflow.
+**Codex execution mapping:** Fable role → GPT-6 Astra; Opus role → GPT-5.6 Sol;
+Sonnet role → GPT-5.6 Terra; Haiku role → GPT-5.6 Luna. The named Claude models
+are unavailable through this session's agent tool. These are explicit role
+substitutions, not claims of model equivalence; original task assignments remain.
+**Process:** bounded file ownership, distinct implementer/reviewer models,
+independent reproduction before acceptance, and Tenzing's existing human gates.
+The retrospective review already reopened two I1.2 admission checks; the earlier
+completion entry below is an implementation checkpoint, not an independent audit.
+**Who:** Tenzing (workflow instruction); Codex (available-model routing).
+**Reference:** [[plan/16-agent-routing]].
+
 ### 2026-09-15 — Data admission and spread sampling implemented
 **Implementation decisions under plan/14:** intraday admission uses exchange-calendar
 symbol-days and SHA-256-bound quality reports; daily CSV admission validates at load.

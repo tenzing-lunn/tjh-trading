@@ -4,16 +4,11 @@
 *Tenzing's project, ~$3–5k of his own money, run with Claude subagents. Two equal goals: learn
 enough to put real work on his résumé, and grow the money without doing anything stupid.*
 
-Last touched: 2026-07-06. New this session: full unfinished-workflow review — dead code
-(`dashboard.py`, merged `feat/webapp-v1` branch) removed, `plan/03-roadmap` refreshed (was
-stale since 2026-07-02), `Run.md` resynced to `run.py`, and the actual Thesis 001 doc written
-([[research/theses/001-cross-sectional-momentum]]) so Tenzing has something concrete to sign.
-Later the same session: **universe slimmed 97 → 30** (`fetch_universe.py`, quality over
-quantity — see [[plan/01-decision-log]]), and the engine actually **re-run live** on it —
-`xsect.py` and `scan.py` both executed end-to-end, results logged in [[plan/02-verdict-log]].
-Notion also restructured this session (see `notion-import/` in the repo root — beginner
-import guide, kept for reference).
-See [[plan/01-decision-log]] 2026-07-06.
+Last touched: 2026-09-16. Resumed the intraday/swing plan from the September 15
+handoff. The data-admission corrections passed independent boundary
+verification; the next deliverable is a reviewed, unsigned I1.5 execution-cost
+proposal. See [[plan/14-intraday-plan]], [[plan/16-agent-routing]] and `HANDOFF.md`.
+The older web-app/universe milestones remain recorded in [[plan/01-decision-log]].
 
 ---
 
@@ -93,8 +88,11 @@ affected file — and Claude updates its cloud memory so the next session starts
 Stale plan = dead plan.
 
 ## ▶️ Current focus
-Short-term intraday/swing research under [[plan/14-intraday-plan]]. Updated 2026-09-15:
-Phase 0, the minute fetcher, data-quality admission and spread measurements are complete.
-Next is the I1.5 execution-cost proposal (Tenzing signs constants), followed by the
-session/delay engine and independent audit. The current daily scan still has zero edges;
+Agent execution follows [[plan/16-agent-routing]]: specialized implementers and a
+separate orchestrator-verifier, with actual available models recorded explicitly.
+Short-term intraday/swing research under [[plan/14-intraday-plan]]. Updated 2026-09-16:
+Phase 0, the minute fetcher and spread measurements are complete. Data-admission
+fixes have passed independent review. The I1.5 execution-cost proposal is being
+prepared for Tenzing to sign before adoption, followed by the session/delay
+engine and independent audit. The current daily scan still has zero edges;
 Thesis 001 remains INCONCLUSIVE and parked. See [[plan/03-roadmap]].
